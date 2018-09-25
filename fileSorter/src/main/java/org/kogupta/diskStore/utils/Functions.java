@@ -5,7 +5,9 @@ import org.kogupta.diskStore.Pojo;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Optional;
@@ -78,5 +80,10 @@ public enum Functions {
         return new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .build();
+    }
+
+    public static LocalDateTime fromMillis(long millis) {
+        OffsetDateTime instant = Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC);
+        return instant.toLocalDateTime();
     }
 }

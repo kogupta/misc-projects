@@ -2,7 +2,6 @@ package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
 import com.google.common.io.MoreFiles;
-import com.jakewharton.byteunits.BinaryByteUnit;
 import org.kogupta.diskStore.lmdbStore.LmdbStore.ReadRequest;
 import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.BufferSize;
@@ -28,7 +27,8 @@ import java.util.Map;
 
 import static java.nio.file.StandardOpenOption.READ;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.kogupta.diskStore.utils.Functions.*;
+import static org.kogupta.diskStore.utils.Functions.getString;
+import static org.kogupta.diskStore.utils.Functions.toMillis;
 import static org.testng.Assert.*;
 
 public class LmdbStoreTest {
@@ -91,6 +91,7 @@ public class LmdbStoreTest {
                 ReadRequest req = new ReadRequest(tenant, min, max + 1);
                 int n = store.countKeysInRange(req);
                 assertTrue(n > 0);
+                assertEquals(n, batchSize);
             }
         }
     }

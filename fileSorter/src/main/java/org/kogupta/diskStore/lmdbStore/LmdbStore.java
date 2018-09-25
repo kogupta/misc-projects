@@ -10,10 +10,10 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.nio.ByteOrder.nativeOrder;
-import static org.lmdbjava.DbiFlags.*;
-import static org.lmdbjava.EnvFlags.MDB_MAPASYNC;
-import static org.lmdbjava.EnvFlags.MDB_NOSYNC;
-import static org.lmdbjava.EnvFlags.MDB_WRITEMAP;
+import static org.kogupta.diskStore.utils.Functions.fromMillis;
+import static org.lmdbjava.DbiFlags.MDB_CREATE;
+import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
+import static org.lmdbjava.EnvFlags.*;
 
 public final class LmdbStore {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -102,12 +102,13 @@ public final class LmdbStore {
         int count = 0;
 
         Dbi<ByteBuffer> dbi = getOrCreateDbi(req.tenant);
-        try (Txn<ByteBuffer> txnRead = env.txnRead();
-             CursorIterator<ByteBuffer> itr = dbi.iterate(txnRead, range, cmp)) {
-            for (CursorIterator.KeyVal<ByteBuffer> ignore : itr.iterable()) {
-                count++;
-            }
-        }
+
+//        try (Txn<ByteBuffer> txnRead = env.txnRead();
+//             CursorIterator<ByteBuffer> itr = dbi.iterate(txnRead, range, cmp)) {
+//            for (CursorIterator.KeyVal<ByteBuffer> ignore : itr.iterable()) {
+//                count++;
+//            }
+//        }
 
 //        try (Txn<ByteBuffer> txnRead = env.txnRead();
 //             CursorIterator<ByteBuffer> curItr = dbi.iterate(txnRead, KeyRange.all())) {
@@ -116,19 +117,27 @@ public final class LmdbStore {
 //            }
 //        }
 
-//        try (Txn<ByteBuffer> txnRead = env.txnRead();
-//             Cursor<ByteBuffer> c = dbi.openCursor(txnRead)) {
-//            boolean b = c.get(range.getStart(), GetOp.MDB_SET_RANGE);
-//            c.seek()
-//        }
+        logger.atInfo().log("Start: %s, end: %s",
+                            fromMillis(req.fromInclusive),
+                            fromMillis(req.to));
 
+        try (Txn<ByteBuffer> txnRead = env.txnRead();
+             Cursor<ByteBuffer> c = dbi.openCursor(txnRead)) {
+            if (!c.get(range.getStart(), GetOp.MDB_SET_RANGE)) {
+                return 0;
+            }
 
+            long cur = c.key().order(nativeOrder()).getLong();
+            int n = 1;
+            while (Long.compare(cur, req.to) < 0) {
+                n++;
+                if (!c.next()) return n;
+                cur = c.key().getLong();
+            }
 
+            return n;
+        }
 
-
-
-
-        return count;
     }
 
     public void close() {

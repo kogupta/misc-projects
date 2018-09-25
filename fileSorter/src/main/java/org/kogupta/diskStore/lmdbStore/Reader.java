@@ -8,10 +8,10 @@ import org.kogupta.diskStore.utils.Functions;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.kogupta.diskStore.utils.Functions.toMillis;
 
 public final class Reader implements Runnable {
@@ -60,14 +60,19 @@ public final class Reader implements Runnable {
             LmdbStore.ReadRequest r = new LmdbStore.ReadRequest(tenant, from, to);
             long t0 = System.nanoTime();
             int n = store.countKeysInRange(r);
+            AppMetrics.newHistogram("kv-store:keyCount")
+                    .update(NANOSECONDS.toMillis(System.nanoTime() - t0));
+            logger.atInfo().log("Count query between: [%s, %s]; key count %,d",
+                                fromMillis(from),
+                                fromMillis(to),
+                                n);
+
             long t1 = System.nanoTime();
             List<Pojo> pojos = store.read(r, Functions::fromByteBuffer);
-            long t2 = System.nanoTime();
-            assert pojos.size() == n : "store inconsistent!";
+            AppMetrics.newHistogram("kv-store:objectRead")
+                    .update(NANOSECONDS.toMillis(System.nanoTime() - t1));
 
-            AppMetrics.newHistogram("kv-store:keyCount").update(NANOSECONDS.toMillis(t1 - t0));
-            AppMetrics.newHistogram("kv-store:objectRead").update(NANOSECONDS.toMillis(t2 - t1));
-            logger.atInfo().log("    key count: %,d", n);
+            assert pojos.size() == n : "store inconsistent!";
 
             logger.atInfo().log("Sending delete request ...");
             deleteQ.add(r);

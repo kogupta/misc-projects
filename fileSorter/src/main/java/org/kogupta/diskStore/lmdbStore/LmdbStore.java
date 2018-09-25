@@ -12,7 +12,6 @@ import java.util.function.Function;
 import static java.nio.ByteOrder.nativeOrder;
 import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
-import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
 import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
 import static org.lmdbjava.EnvFlags.*;
 
@@ -28,7 +27,7 @@ public final class LmdbStore {
     LmdbStore(File dir, String[] tenants) {
         env = Env.create()
                 .setMaxDbs(10) // TODO
-                .setMapSize(BinaryByteUnit.GIBIBYTES.toBytes(1))
+                .setMapSize(BinaryByteUnit.GIBIBYTES.toBytes(20))
                 .setMaxReaders(4)
                 .open(dir, MDB_WRITEMAP, MDB_NOSYNC, MDB_MAPASYNC);
         databases = new HashMap<>();
@@ -112,10 +111,6 @@ public final class LmdbStore {
 
     public int countKeysInRange(ReadRequest req) {
         Dbi<ByteBuffer> dbi = getOrCreateDbi(req.tenant);
-
-        logger.atInfo().log("Start: %s, end: %s",
-                            fromMillis(req.fromInclusive),
-                            fromMillis(req.to));
 
         ByteBuffer from = bbTime(req.fromInclusive);
         try (Txn<ByteBuffer> txnRead = env.txnRead();

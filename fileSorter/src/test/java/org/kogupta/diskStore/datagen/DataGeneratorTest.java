@@ -10,6 +10,9 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+// 1k payload, 1k millis per second per tenant
+// => 1Mb /tenant/second
+// => 60Mb => /tenant /minute
 public class DataGeneratorTest {
     @Test
     public void testGenerateUsing() throws IOException, InterruptedException {
@@ -21,7 +24,7 @@ public class DataGeneratorTest {
 
         System.out.println("Directory created: " + path.toAbsolutePath());
 
-        Args args = new Args(start, end, path, 10, BufferSize.OneK);
+        Args args = new Args(start, end, path, 1, BufferSize.OneK);
 
         DataGenerator.generateUsing(args);
 

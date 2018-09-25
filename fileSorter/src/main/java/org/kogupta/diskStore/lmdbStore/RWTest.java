@@ -30,7 +30,7 @@ public final class RWTest {
 
     public static void main(String[] _args) throws IOException, InterruptedException {
 //        Args args = Args.parse(_args);
-        Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "10");
+        Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "1");
         start(args);
     }
 
@@ -42,8 +42,8 @@ public final class RWTest {
         Files.createDirectories(f.toPath());
         LmdbStore store = new LmdbStore(f, Functions.tenants(tenantCount));
 
-        BlockingQueue<LocalDateTime> readerQ = new LinkedBlockingQueue<>(256);
-        BlockingQueue<LmdbStore.ReadRequest> deleteQ = new LinkedBlockingQueue<>(256);
+        BlockingQueue<LocalDateTime> readerQ = new LinkedBlockingQueue<>();
+        BlockingQueue<LmdbStore.ReadRequest> deleteQ = new LinkedBlockingQueue<>();
 
         Path input = new File(dataDir.toFile(), "data.bin").toPath();
         Writer writer = new Writer(input, args.size, store, readerQ, deleteQ);

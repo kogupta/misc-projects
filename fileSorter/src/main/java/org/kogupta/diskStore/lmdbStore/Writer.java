@@ -6,7 +6,6 @@ import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.AppMetrics;
 import org.kogupta.diskStore.utils.BufferSize;
 import org.kogupta.diskStore.utils.Functions;
-import org.kogupta.diskStore.utils.TimeProvider;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,8 +19,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.READ;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.kogupta.diskStore.utils.Functions.getString;
 
 public final class Writer implements Runnable {
     public static final LocalDateTime POISON_PILL = LocalDate.parse("1970-01-01").atStartOfDay();
@@ -69,23 +68,27 @@ public final class Writer implements Runnable {
                 if (batchCount % signalRate == 0) {
                     logger.atInfo().log("    sending read message");
                     long timestamp = buffer.getLong(Integer.BYTES);
-                    OffsetDateTime instant = Instant.ofEpochMilli(timestamp).atOffset(ZoneOffset.UTC);
-                    readQ.add(instant.toLocalDateTime());
+                    
+                    readQ.add();
                 }
 
                 buffer.clear();
 
-                deleteIfAny();
+//                deleteIfAny();
             }
         } catch (IOException e) {
             logger.atSevere().withCause(e).log("Error while opening input file: %s", input);
         }
 
-        if (noMoreDeletes) deleteRemaining();
+//        if (noMoreDeletes) deleteRemaining();
+        logger.atInfo().log("Read all values ... adding read PoisonPill");
+        readQ.add(POISON_PILL);
+
+        RWTest.blocker.countDown();
     }
 
     private void writeToFileStore(ByteBuffer buffer) {
-        final int end = buffer.limit();
+        int end = buffer.limit();
         List<WriteParam<ByteBuffer>> params = new ArrayList<>(batchSize);
         for (int start = 0; start != end; start = buffer.limit()) {
             int delta = Math.min(end - start, payloadSize); // payloadSize == stride
@@ -96,7 +99,7 @@ public final class Writer implements Runnable {
             // byteBuffer position madness!
             buffer.position(buffer.position() + Integer.BYTES);
             long timestamp = buffer.getLong();
-            String tenant = Functions.getString(buffer);
+            String tenant = getString(buffer);
 
             WriteParam<ByteBuffer> param = new WriteParam<>(tenant, timestamp, view);
             params.add(param);
@@ -124,12 +127,12 @@ public final class Writer implements Runnable {
     }
 
     private void delete(LmdbStore.ReadRequest r) {
-        logger.atInfo().log("Executing delete ... ");
-        long t0 = System.nanoTime();
-        int n = store.deleteInRange(r);
-        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-        AppMetrics.newHistogram("kv-store:delete").update(millis);
-        logger.atInfo().log("    Deleted %,d keys", n);
+//        logger.atInfo().log("Executing delete ... ");
+//        long t0 = System.nanoTime();
+//        int n = store.deleteInRange(r);
+//        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+//        AppMetrics.newHistogram("kv-store:delete").update(millis);
+//        logger.atInfo().log("    Deleted %,d keys", n);
     }
 
     private void deleteIfAny() {

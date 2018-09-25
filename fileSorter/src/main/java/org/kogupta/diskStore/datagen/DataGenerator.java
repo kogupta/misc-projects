@@ -104,7 +104,7 @@ public final class DataGenerator {
     private static void write(Path target, ByteBuffer buffer) {
         logger.atInfo().log("Writing to file: %s", bb(buffer));
 
-        try (SeekableByteChannel channel = Files.newByteChannel(target, CREATE, TRUNCATE_EXISTING, WRITE)) {
+        try (SeekableByteChannel channel = Files.newByteChannel(target, CREATE, WRITE, APPEND)) {
             int n = channel.write(buffer);
             logger.atInfo().log("# of bytes written: %,d", n);
         } catch (IOException e) {

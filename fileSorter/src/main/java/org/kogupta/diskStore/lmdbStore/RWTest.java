@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.String.join;
@@ -25,14 +26,15 @@ import static org.kogupta.diskStore.utils.Functions.require;
 
 public final class RWTest {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    public static final CountDownLatch blocker = new CountDownLatch(2);
 
-    public static void main(String[] _args) throws IOException {
+    public static void main(String[] _args) throws IOException, InterruptedException {
 //        Args args = Args.parse(_args);
         Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "1");
         start(args);
     }
 
-    public static void start(Args args) throws IOException {
+    public static void start(Args args) throws IOException, InterruptedException {
         Path dataDir = args.dataDir;
         int tenantCount = args.tenantCount;
 
@@ -49,11 +51,14 @@ public final class RWTest {
 
         File csvDir = new File(dataDir.toFile(), "csv-metrics");
         AppMetrics metrics = AppMetrics.createStarted(csvDir, 30, SECONDS);
+
         startThread(reader, "reader");
         startThread(writer, "writer");
 
-        Runtime.getRuntime().addShutdownHook(new Thread(metrics::stop));
+        blocker.await();
+
         metrics.report();
+        metrics.stop();
     }
 
     private static void startThread(Runnable r, String name) {

@@ -16,20 +16,20 @@ public class DataGeneratorTest {
     @Test
     public void testGenerateUsing() throws IOException, InterruptedException {
         LocalDateTime start = LocalDate.parse("2018-01-01").atStartOfDay();
-        LocalDateTime end = start.plusMinutes(10);
+        LocalDateTime end = start.plusMinutes(30);
 //        Path path = Files.createTempDirectory("fileSorter");
         Path path = Paths.get("/tmp/fileSorter");
         Files.createDirectories(path);
 
         System.out.println("Directory created: " + path.toAbsolutePath());
 
-        Args args = new Args(start, end, path, 1, BufferSize.OneK);
+        Args args = new Args(start, end, path, 10, BufferSize.OneK);
 
         DataGenerator.generateUsing(args);
 
-        RWTest.Args testArgs = RWTest.Args.fromDatagenArgs(args);
-        RWTest.start(testArgs);
-
-        TimeUnit.MINUTES.sleep(1);
+//        RWTest.Args testArgs = RWTest.Args.fromDatagenArgs(args);
+//        RWTest.start(testArgs);
+//
+//        TimeUnit.MINUTES.sleep(1);
     }
 }

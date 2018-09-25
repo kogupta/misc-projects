@@ -51,6 +51,8 @@ public final class Reader implements Runnable {
         }
 
         deleteQ.add(POISON_PILL);
+
+        RWTest.blocker.countDown();
     }
 
     private void read(long from, long to) {

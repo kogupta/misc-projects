@@ -12,6 +12,7 @@ import java.util.function.Function;
 import static java.nio.ByteOrder.nativeOrder;
 import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
+import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
 import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
 import static org.lmdbjava.EnvFlags.*;
 

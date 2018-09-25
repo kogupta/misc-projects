@@ -1,29 +1,27 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
-import com.oracle.emcsas.fileSorter.LmdbStore.ReadRequest;
-import com.oracle.emcsas.utils.AppMetrics;
-import com.oracle.emcsas.utils.Functions;
+import org.kogupta.diskStore.Pojo;
+import org.kogupta.diskStore.utils.AppMetrics;
+import org.kogupta.diskStore.utils.Functions;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import static com.oracle.emcsas.utils.Functions.toMillis;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static org.kogupta.diskStore.utils.Functions.toMillis;
 
 public final class Reader implements Runnable {
+    public static final LmdbStore.ReadRequest POISON_PILL = new LmdbStore.ReadRequest("--end-now--", 1, 2);
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-
-    public static final ReadRequest POISON_PILL = new ReadRequest("--end-now--", 1, 2);
-
     private final BlockingQueue<LocalDateTime> readQ;
-    private final BlockingQueue<ReadRequest> deleteQ;
+    private final BlockingQueue<LmdbStore.ReadRequest> deleteQ;
     private final LmdbStore store;
     private final String[] tenants;
 
     public Reader(BlockingQueue<LocalDateTime> queue,
-                  BlockingQueue<ReadRequest> deleteQ,
+                  BlockingQueue<LmdbStore.ReadRequest> deleteQ,
                   LmdbStore store,
                   int tenantCount) {
         this.readQ = queue;
@@ -52,7 +50,7 @@ public final class Reader implements Runnable {
 
     private void read(long from, long to) {
         for (String tenant : tenants) {
-            ReadRequest r = new ReadRequest(tenant, from, to);
+            LmdbStore.ReadRequest r = new LmdbStore.ReadRequest(tenant, from, to);
             long t0 = System.nanoTime();
             int n = store.countKeysInRange(r);
             long t1 = System.nanoTime();

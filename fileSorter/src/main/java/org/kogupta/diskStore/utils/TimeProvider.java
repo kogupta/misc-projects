@@ -1,10 +1,11 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 public interface TimeProvider {
-    long currentTimeMillis();
-    void updateCurrentTimeMillis(long millis);
-
     static TimeProvider instance() {
         return EventTimeProvider.INSTANCE;
     }
+
+    long currentTimeMillis();
+
+    void updateCurrentTimeMillis(long millis);
 }

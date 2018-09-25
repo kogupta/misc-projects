@@ -1,8 +1,7 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.datagen;
 
-import com.oracle.emcsas.fileSorter.datagen.Args;
-import com.oracle.emcsas.fileSorter.datagen.DataGenerator;
-import com.oracle.emcsas.utils.BufferSize;
+import org.kogupta.diskStore.lmdbStore.RWTest;
+import org.kogupta.diskStore.utils.BufferSize;
 import org.testng.annotations.Test;
 
 import java.io.IOException;

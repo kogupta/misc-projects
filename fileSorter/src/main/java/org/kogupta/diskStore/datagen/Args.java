@@ -1,10 +1,10 @@
-package com.oracle.emcsas.fileSorter.datagen;
+package org.kogupta.diskStore.datagen;
 
 import com.google.common.flogger.FluentLogger;
-import com.oracle.emcsas.utils.BufferSize;
 import joptsimple.*;
 import joptsimple.util.EnumConverter;
 import joptsimple.util.PathConverter;
+import org.kogupta.diskStore.utils.BufferSize;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,10 +13,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.oracle.emcsas.utils.Functions.require;
-import static com.oracle.emcsas.utils.Functions.tryParse;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static org.kogupta.diskStore.utils.Functions.require;
+import static org.kogupta.diskStore.utils.Functions.tryParse;
 
 public final class Args {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -28,10 +28,10 @@ public final class Args {
     public final BufferSize bufferSize;
 
     public Args(LocalDateTime fromDate,
-                 LocalDateTime endDate,
-                 Path dataDir,
-                 int tenantCount,
-                 BufferSize bufferSize) {
+                LocalDateTime endDate,
+                Path dataDir,
+                int tenantCount,
+                BufferSize bufferSize) {
         this.fromDate = fromDate;
         this.endDate = endDate;
         this.dataDir = dataDir;
@@ -97,6 +97,13 @@ public final class Args {
         return new Args(fromDate, endDate, dataDir, tenantCount, bufferSize);
     }
 
+    public static void main(String[] args) throws IOException {
+        Args _args = Args.parse(args);
+        System.out.println("From date: " + _args.fromDate.toString());
+        System.out.println("End date: " + _args.endDate);
+        System.out.println("Storing data at: " + _args.dataDir);
+    }
+
     private static final class DateConverter implements ValueConverter<LocalDateTime> {
         private static final String datePattern = "YYYY-MM-dd"; // ISO_LOCAL_DATE
 
@@ -126,19 +133,12 @@ public final class Args {
             return tryParse(value)
                     .flatMap(BufferSize::fromSize)
                     .orElseGet(() -> BufferSize.fromSynonym(value)
-                    .orElseGet(() -> super.convert(value)));
+                            .orElseGet(() -> super.convert(value)));
         }
 
         @Override
         public String valuePattern() {
             return join(", ", BufferSize.allPossibleValues());
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        Args _args = Args.parse(args);
-        System.out.println("From date: " + _args.fromDate.toString());
-        System.out.println("End date: " + _args.endDate);
-        System.out.println("Storing data at: " + _args.dataDir);
     }
 }

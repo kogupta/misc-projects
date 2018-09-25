@@ -1,4 +1,4 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.MetricRegistry.MetricSupplier;
@@ -13,15 +13,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class AppMetrics {
     public static final MetricRegistry registry = new MetricRegistry();
-
+    private static final MetricSupplier<Histogram> supplier =
+            () -> new Histogram(new SlidingTimeWindowArrayReservoir(30, SECONDS));
+    private static AppMetrics instance;
     private final ConsoleReporter reporter;
     private final JmxReporter jmxReporter;
     private final CsvReporter csvReporter;
-
     private final long period;
     private final TimeUnit unit;
-    private static final MetricSupplier<Histogram> supplier =
-            () -> new Histogram(new SlidingTimeWindowArrayReservoir(30, SECONDS));
 
     private AppMetrics(File dir, long period, TimeUnit unit) {
         this.period = period;
@@ -43,6 +42,18 @@ public final class AppMetrics {
                 .build(dir);
     }
 
+    public static Histogram newHistogram(String name) {
+        return registry.histogram(name, supplier);
+    }
+
+    public static synchronized AppMetrics createStarted(File dir, long period, TimeUnit unit) {
+        if (instance == null) {
+            instance = new AppMetrics(dir, period, unit);
+            instance.start();
+        }
+        return instance;
+    }
+
     private void start() {
         reporter.start(period, unit);
         jmxReporter.start();
@@ -58,19 +69,5 @@ public final class AppMetrics {
         reporter.stop();
         csvReporter.stop();
         jmxReporter.stop();
-    }
-
-    public static Histogram newHistogram(String name) {
-        return registry.histogram(name, supplier);
-    }
-
-    private static AppMetrics instance;
-
-    public static synchronized AppMetrics createStarted(File dir, long period, TimeUnit unit) {
-        if (instance == null) {
-            instance = new AppMetrics(dir, period, unit);
-            instance.start();
-        }
-        return instance;
     }
 }

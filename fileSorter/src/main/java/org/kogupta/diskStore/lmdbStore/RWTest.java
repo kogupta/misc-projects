@@ -1,15 +1,13 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
-import com.oracle.emcsas.fileSorter.datagen.Args.BufSizeConverter;
-import com.oracle.emcsas.fileSorter.LmdbStore.ReadRequest;
-import com.oracle.emcsas.utils.AppMetrics;
-import com.oracle.emcsas.utils.BufferSize;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.util.PathConverter;
+import org.kogupta.diskStore.utils.AppMetrics;
+import org.kogupta.diskStore.utils.BufferSize;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +17,10 @@ import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.oracle.emcsas.utils.Functions.namedTF;
-import static com.oracle.emcsas.utils.Functions.require;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.kogupta.diskStore.utils.Functions.require;
 
 public final class RWTest {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -43,7 +39,7 @@ public final class RWTest {
         LmdbStore store = new LmdbStore(f, tenantCount);
 
         BlockingQueue<LocalDateTime> readerQ = new LinkedBlockingQueue<>(256);
-        BlockingQueue<ReadRequest> deleteQ = new LinkedBlockingQueue<>(256);
+        BlockingQueue<LmdbStore.ReadRequest> deleteQ = new LinkedBlockingQueue<>(256);
 
         Path input = new File(dataDir.toFile(), "data.bin").toPath();
         Writer writer = new Writer(input, args.size, store, readerQ, deleteQ);
@@ -94,7 +90,7 @@ public final class RWTest {
             ArgumentAcceptingOptionSpec<BufferSize> bufSizeSpec =
                     parser.acceptsAll(asList("bufferSize", "buffer-size"), "simulated payload size - use one of " + join(", ", BufferSize.allPossibleValues()))
                             .withRequiredArg()
-                            .withValuesConvertedBy(new BufSizeConverter())
+                            .withValuesConvertedBy(new org.kogupta.diskStore.datagen.Args.BufSizeConverter())
                             .defaultsTo(BufferSize.OneK);
 
             parser.acceptsAll(asList("help", "?"), "show help and exit").forHelp();
@@ -118,7 +114,7 @@ public final class RWTest {
             return new Args(dataDir, tenantCount, bufferSize);
         }
 
-        public static Args fromDatagenArgs(com.oracle.emcsas.fileSorter.datagen.Args args) {
+        public static Args fromDatagenArgs(org.kogupta.diskStore.datagen.Args args) {
             return new Args(args.dataDir, args.tenantCount, args.bufferSize);
         }
     }

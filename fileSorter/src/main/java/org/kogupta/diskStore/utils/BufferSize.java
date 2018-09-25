@@ -1,32 +1,36 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 import java.util.Optional;
 
 public enum BufferSize {
     OneK {
-        @Override public int intSize() { return 1024; }
+        @Override
+        public int intSize() { return 1024; }
 
-        @Override public String synonym() { return "1k"; }
+        @Override
+        public String synonym() { return "1k"; }
     },
     TwoK {
-        @Override public int intSize() { return 2 * 1024; }
+        @Override
+        public int intSize() { return 2 * 1024; }
 
-        @Override public String synonym() { return "2k"; }
+        @Override
+        public String synonym() { return "2k"; }
     },
     FourK {
-        @Override public int intSize() { return 4 * 1024; }
+        @Override
+        public int intSize() { return 4 * 1024; }
 
-        @Override public String synonym() { return "4k"; }
+        @Override
+        public String synonym() { return "4k"; }
     },
     HalfKb {
-        @Override public int intSize() { return 512; }
+        @Override
+        public int intSize() { return 512; }
 
-        @Override public String synonym() { return "0.5k"; }
-    },
-    ;
-
-    public abstract int intSize();
-    public abstract String synonym();
+        @Override
+        public String synonym() { return "0.5k"; }
+    },;
 
     public static Optional<BufferSize> fromSize(int n) {
         for (BufferSize e : values()) {
@@ -60,4 +64,8 @@ public enum BufferSize {
 
         return xs;
     }
+
+    public abstract int intSize();
+
+    public abstract String synonym();
 }

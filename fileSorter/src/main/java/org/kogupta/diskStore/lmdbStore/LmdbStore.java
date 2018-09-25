@@ -1,4 +1,4 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.lmdbStore;
 
 import org.lmdbjava.*;
 
@@ -8,9 +8,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.nio.ByteOrder.nativeOrder;
-import static org.lmdbjava.DbiFlags.MDB_CREATE;
-import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
-import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
+import static org.lmdbjava.DbiFlags.*;
 
 public final class LmdbStore {
     private static final Comparator<ByteBuffer> cmp = Comparator.comparing(a -> a.order(nativeOrder()));
@@ -31,30 +29,16 @@ public final class LmdbStore {
         key = ByteBuffer.allocateDirect(8).order(nativeOrder());
     }
 
-    public static final class WriteParam<T> {
-        final String tenant;
-        final long timestamp;
-        final T payload;
-
-        public WriteParam(String tenant, long timestamp, T payload) {
-            this.tenant = tenant;
-            this.timestamp = timestamp;
-            this.payload = payload;
-        }
+    private static KeyRange<ByteBuffer> createRange(long fromInclusive, long to) {
+        ByteBuffer start = bbTime(fromInclusive);
+        ByteBuffer stop = bbTime(to);
+        return KeyRange.closedOpen(start, stop);
     }
 
-    public static final class ReadRequest {
-        final String tenant;
-        final long fromInclusive;
-        final long to;
-
-        public ReadRequest(String tenant, long fromInclusive, long to) {
-            assert fromInclusive < to;
-
-            this.tenant = tenant;
-            this.fromInclusive = fromInclusive;
-            this.to = to;
-        }
+    private static ByteBuffer bbTime(long n) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(Long.BYTES).order(nativeOrder());
+        buffer.putLong(n).flip();
+        return buffer;
     }
 
     public void bulkAdd(List<WriteParam<ByteBuffer>> params) {
@@ -121,15 +105,29 @@ public final class LmdbStore {
         return count;
     }
 
-    private static KeyRange<ByteBuffer> createRange(long fromInclusive, long to) {
-        ByteBuffer start = bbTime(fromInclusive);
-        ByteBuffer stop = bbTime(to);
-        return KeyRange.closedOpen(start, stop);
+    public static final class WriteParam<T> {
+        final String tenant;
+        final long timestamp;
+        final T payload;
+
+        public WriteParam(String tenant, long timestamp, T payload) {
+            this.tenant = tenant;
+            this.timestamp = timestamp;
+            this.payload = payload;
+        }
     }
 
-    private static ByteBuffer bbTime(long n) {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(Long.BYTES).order(nativeOrder());
-        buffer.putLong(n).flip();
-        return buffer;
+    public static final class ReadRequest {
+        final String tenant;
+        final long fromInclusive;
+        final long to;
+
+        public ReadRequest(String tenant, long fromInclusive, long to) {
+            assert fromInclusive < to;
+
+            this.tenant = tenant;
+            this.fromInclusive = fromInclusive;
+            this.to = to;
+        }
     }
 }

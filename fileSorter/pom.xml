@@ -92,7 +92,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>com.oracle.emcsas.utils.App</mainClass>
+                            <mainClass>org.kogupta.diskStore.utils.App</mainClass>
                         </manifest>
                     </archive>
                     <!-- no -jar-with-dependencies suffix in the name -->

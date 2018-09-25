@@ -1,7 +1,7 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.oracle.emcsas.fileSorter.Pojo;
+import org.kogupta.diskStore.Pojo;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -56,7 +56,7 @@ public enum Functions {
 
     public static String[] tenants(int n) {
         String[] xs = new String[n];
-        Arrays.setAll(xs, i -> i < 10 ? "tenant_0" + i: "tenant_" + i);
+        Arrays.setAll(xs, i -> i < 10 ? "tenant_0" + i : "tenant_" + i);
         return xs;
     }
 
@@ -71,7 +71,7 @@ public enum Functions {
 
     public static String bb(ByteBuffer bb) {
         return String.format("direct: %s, position: %,d, limit: %,d, capacity: %,d",
-                bb.isDirect(), bb.position(), bb.limit(), bb.capacity());
+                             bb.isDirect(), bb.position(), bb.limit(), bb.capacity());
     }
 
     public static ThreadFactory namedTF(String name) {

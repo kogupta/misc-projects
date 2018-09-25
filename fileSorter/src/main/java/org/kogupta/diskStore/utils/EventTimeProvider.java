@@ -1,4 +1,4 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 enum EventTimeProvider implements TimeProvider {
     INSTANCE;

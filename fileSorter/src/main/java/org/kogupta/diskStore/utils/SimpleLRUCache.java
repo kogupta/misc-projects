@@ -1,4 +1,4 @@
-package com.oracle.emcsas.utils;
+package org.kogupta.diskStore.utils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,11 +11,11 @@ public final class SimpleLRUCache<K, V> extends LinkedHashMap<K, V> {
         this.cacheSize = cacheSize;
     }
 
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        return size() >= cacheSize;
-    }
-
     public static <K, V> SimpleLRUCache<K, V> newInstance(int size) {
         return new SimpleLRUCache<>(size);
+    }
+
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+        return size() >= cacheSize;
     }
 }

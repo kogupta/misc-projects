@@ -1,7 +1,6 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.datagen;
 
 
-import com.oracle.emcsas.fileSorter.datagen.Args;
 import org.testng.annotations.Test;
 
 public class ArgsTest {

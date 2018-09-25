@@ -1,7 +1,7 @@
-package com.oracle.emcsas.fileSorter.datagen;
+package org.kogupta.diskStore.datagen;
 
 import com.google.common.flogger.FluentLogger;
-import com.oracle.emcsas.fileSorter.Pojo;
+import org.kogupta.diskStore.Pojo;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -13,9 +13,9 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-import static com.oracle.emcsas.utils.Functions.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.kogupta.diskStore.utils.Functions.*;
 
 public final class DataGenerator {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -51,8 +51,8 @@ public final class DataGenerator {
         logger.atInfo().log("Total # of events written: %,d", id);
 
         logger.atInfo().log("Total size of file [%s] written: %,d",
-                target.toAbsolutePath(),
-                target.toFile().length());
+                            target.toAbsolutePath(),
+                            target.toFile().length());
     }
 
     // wait 5 mins actually

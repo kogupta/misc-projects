@@ -1,12 +1,10 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
-import com.oracle.emcsas.fileSorter.LmdbStore.ReadRequest;
-import com.oracle.emcsas.fileSorter.LmdbStore.WriteParam;
-import com.oracle.emcsas.utils.AppMetrics;
-import com.oracle.emcsas.utils.BufferSize;
-import com.oracle.emcsas.utils.Functions;
-import com.oracle.emcsas.utils.TimeProvider;
+import org.kogupta.diskStore.utils.AppMetrics;
+import org.kogupta.diskStore.utils.BufferSize;
+import org.kogupta.diskStore.utils.Functions;
+import org.kogupta.diskStore.utils.TimeProvider;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,30 +21,52 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public final class Writer implements Runnable {
+    public static final LocalDateTime POISON_PILL = LocalDate.parse("1970-01-01").atStartOfDay();
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
     private static final int batchSize = (int) MINUTES.toMillis(1);
-
-    public static final LocalDateTime POISON_PILL = LocalDate.parse("1970-01-01").atStartOfDay();
-
     private final Path input;
     private final TimeProvider provider;
     private final int payloadSize;
     private final LmdbStore store;
     private final BlockingQueue<LocalDateTime> readQ;
-    private final BlockingQueue<ReadRequest> deleteQ;
+    private final BlockingQueue<LmdbStore.ReadRequest> deleteQ;
 
     private boolean noMoreDeletes = false;
 
     public Writer(Path input,
                   BufferSize size,
                   LmdbStore store,
-                  BlockingQueue<LocalDateTime> queue, BlockingQueue<ReadRequest> deleteQ) {
+                  BlockingQueue<LocalDateTime> queue, BlockingQueue<LmdbStore.ReadRequest> deleteQ) {
         this.input = input;
         this.payloadSize = size.intSize();
         this.store = store;
         this.readQ = queue;
         this.deleteQ = deleteQ;
         this.provider = TimeProvider.instance();
+    }
+
+    //<editor-fold desc="ByteBuffer test">
+    public static void main(String[] args) {
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * 10);
+        for (int i = 0; i < 10; i++) buffer.putInt(i);
+
+        buffer.flip();
+
+        // read in groups of 3
+        // so 4 BBs, 3 of size 3 and 1 of 1
+        final int end = buffer.limit(), stride = 3 * Integer.BYTES;
+
+        for (int start = 0; start != end; start = buffer.limit()) {
+            int delta = Math.min(end - start, stride);
+            buffer.position(start).limit(start + delta);
+            _consume(buffer.asReadOnlyBuffer());
+        }
+    }
+
+    private static void _consume(ByteBuffer buffer) {
+        System.out.println(Functions.bb(buffer));
+        while (buffer.hasRemaining()) System.out.print(buffer.getInt() + "  ");
+        System.out.println();
     }
 
     @Override
@@ -83,7 +103,7 @@ public final class Writer implements Runnable {
 
     private void deleteRemaining() {
         // delete remaining requests
-        ReadRequest r;
+        LmdbStore.ReadRequest r;
         try {
             while ((r = deleteQ.take()) != Reader.POISON_PILL) {
                 delete(r);
@@ -93,7 +113,7 @@ public final class Writer implements Runnable {
         }
     }
 
-    private void delete(ReadRequest r) {
+    private void delete(LmdbStore.ReadRequest r) {
         long t0 = System.nanoTime();
         store.deleteInRange(r);
         long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
@@ -103,7 +123,7 @@ public final class Writer implements Runnable {
     private void deleteIfAny() {
         if (noMoreDeletes) return;
 
-        ReadRequest r = deleteQ.poll();
+        LmdbStore.ReadRequest r = deleteQ.poll();
         if (r == null) return;
         if (r == Reader.POISON_PILL) {
             noMoreDeletes = true;
@@ -115,7 +135,7 @@ public final class Writer implements Runnable {
 
     private void writeToFileStore(ByteBuffer buffer) {
         final int end = buffer.limit();
-        List<WriteParam<ByteBuffer>> params = new ArrayList<>(batchSize);
+        List<LmdbStore.WriteParam<ByteBuffer>> params = new ArrayList<>(batchSize);
         for (int start = 0; start != end; start = buffer.limit()) {
             int delta = Math.min(end - start, payloadSize); // payloadSize == stride
             buffer.position(start).limit(start + delta);
@@ -127,7 +147,7 @@ public final class Writer implements Runnable {
             provider.updateCurrentTimeMillis(timestamp);
 
             String tenant = Functions.getString(buffer);
-            WriteParam<ByteBuffer> param = new WriteParam<>(tenant, timestamp, view);
+            LmdbStore.WriteParam<ByteBuffer> param = new LmdbStore.WriteParam<>(tenant, timestamp, view);
             params.add(param);
         }
 
@@ -136,30 +156,6 @@ public final class Writer implements Runnable {
         long nanos = System.nanoTime() - t0;
         long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
         AppMetrics.registry.histogram("kv-store:write").update(millis);
-    }
-
-    //<editor-fold desc="ByteBuffer test">
-    public static void main(String[] args) {
-        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * 10);
-        for (int i = 0; i < 10; i++) buffer.putInt(i);
-
-        buffer.flip();
-
-        // read in groups of 3
-        // so 4 BBs, 3 of size 3 and 1 of 1
-        final int end = buffer.limit(), stride = 3 * Integer.BYTES;
-
-        for (int start = 0; start != end; start = buffer.limit()) {
-            int delta = Math.min(end - start, stride);
-            buffer.position(start).limit(start + delta);
-            _consume(buffer.asReadOnlyBuffer());
-        }
-    }
-
-    private static void _consume(ByteBuffer buffer) {
-        System.out.println(Functions.bb(buffer));
-        while (buffer.hasRemaining()) System.out.print(buffer.getInt() + "  ");
-        System.out.println();
     }
     //</editor-fold>
 }

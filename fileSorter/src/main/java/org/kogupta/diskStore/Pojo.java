@@ -1,16 +1,29 @@
-package com.oracle.emcsas.fileSorter;
+package org.kogupta.diskStore;
 
-import com.oracle.emcsas.utils.Functions;
+import org.kogupta.diskStore.utils.Functions;
 
 import java.nio.ByteBuffer;
 
-import static com.oracle.emcsas.utils.Functions.require;
+import static org.kogupta.diskStore.utils.Functions.require;
 
 public class Pojo {
     private int id;
     private String tenantId;
     private long timestamp;
     private String payload;
+
+    public static Pojo fromByteArray(byte[] bytes) {
+        require(bytes != null && bytes.length > 20, "byteArray should be at least 20 bytes long!");
+
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        Pojo pojo = new Pojo();
+        pojo.setId(buffer.getInt());
+        pojo.setTimestamp(buffer.getLong());
+        pojo.setTenantId(Functions.getString(buffer));
+        pojo.setPayload(Functions.getString(buffer));
+
+        return pojo;
+    }
 
     public int getId() { return id; }
 
@@ -64,19 +77,6 @@ public class Pojo {
         buffer.get(bb);
 
         return bb;
-    }
-
-    public static Pojo fromByteArray(byte[] bytes) {
-        require(bytes != null && bytes.length > 20, "byteArray should be at least 20 bytes long!");
-
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        Pojo pojo = new Pojo();
-        pojo.setId(buffer.getInt());
-        pojo.setTimestamp(buffer.getLong());
-        pojo.setTenantId(Functions.getString(buffer));
-        pojo.setPayload(Functions.getString(buffer));
-
-        return pojo;
     }
 
 

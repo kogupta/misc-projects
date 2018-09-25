@@ -25,7 +25,6 @@ public final class Writer implements Runnable {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
     private static final int batchSize = (int) MINUTES.toMillis(1);
     private final Path input;
-    private final TimeProvider provider;
     private final int payloadSize;
     private final LmdbStore store;
     private final BlockingQueue<LocalDateTime> readQ;
@@ -42,31 +41,6 @@ public final class Writer implements Runnable {
         this.store = store;
         this.readQ = queue;
         this.deleteQ = deleteQ;
-        this.provider = TimeProvider.instance();
-    }
-
-    //<editor-fold desc="ByteBuffer test">
-    public static void main(String[] args) {
-        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * 10);
-        for (int i = 0; i < 10; i++) buffer.putInt(i);
-
-        buffer.flip();
-
-        // read in groups of 3
-        // so 4 BBs, 3 of size 3 and 1 of 1
-        final int end = buffer.limit(), stride = 3 * Integer.BYTES;
-
-        for (int start = 0; start != end; start = buffer.limit()) {
-            int delta = Math.min(end - start, stride);
-            buffer.position(start).limit(start + delta);
-            _consume(buffer.asReadOnlyBuffer());
-        }
-    }
-
-    private static void _consume(ByteBuffer buffer) {
-        System.out.println(Functions.bb(buffer));
-        while (buffer.hasRemaining()) System.out.print(buffer.getInt() + "  ");
-        System.out.println();
     }
 
     @Override
@@ -101,6 +75,30 @@ public final class Writer implements Runnable {
         if (noMoreDeletes) deleteRemaining();
     }
 
+    private void writeToFileStore(ByteBuffer buffer) {
+        final int end = buffer.limit();
+        List<LmdbStore.WriteParam<ByteBuffer>> params = new ArrayList<>(batchSize);
+        for (int start = 0; start != end; start = buffer.limit()) {
+            int delta = Math.min(end - start, payloadSize); // payloadSize == stride
+            buffer.position(start).limit(start + delta);
+
+            ByteBuffer view = buffer.slice();
+            logger.atInfo().log(Functions.bb(view));
+
+            long timestamp = buffer.getLong(Integer.BYTES);
+
+            String tenant = Functions.getString(buffer);
+            LmdbStore.WriteParam<ByteBuffer> param = new LmdbStore.WriteParam<>(tenant, timestamp, view);
+            params.add(param);
+        }
+
+        long t0 = System.nanoTime();
+        store.bulkAdd(params);
+        long nanos = System.nanoTime() - t0;
+        long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
+        AppMetrics.registry.histogram("kv-store:write").update(millis);
+    }
+
     private void deleteRemaining() {
         // delete remaining requests
         LmdbStore.ReadRequest r;
@@ -133,29 +131,28 @@ public final class Writer implements Runnable {
         delete(r);
     }
 
-    private void writeToFileStore(ByteBuffer buffer) {
-        final int end = buffer.limit();
-        List<LmdbStore.WriteParam<ByteBuffer>> params = new ArrayList<>(batchSize);
+    //<editor-fold desc="ByteBuffer test">
+    public static void main(String[] args) {
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * 10);
+        for (int i = 0; i < 10; i++) buffer.putInt(i);
+
+        buffer.flip();
+
+        // read in groups of 3
+        // so 4 BBs, 3 of size 3 and 1 of 1
+        final int end = buffer.limit(), stride = 2 * Integer.BYTES;
+
         for (int start = 0; start != end; start = buffer.limit()) {
-            int delta = Math.min(end - start, payloadSize); // payloadSize == stride
+            int delta = Math.min(end - start, stride);
             buffer.position(start).limit(start + delta);
-
-            ByteBuffer view = buffer.slice();
-
-            long timestamp = buffer.getLong(Integer.BYTES);
-
-            provider.updateCurrentTimeMillis(timestamp);
-
-            String tenant = Functions.getString(buffer);
-            LmdbStore.WriteParam<ByteBuffer> param = new LmdbStore.WriteParam<>(tenant, timestamp, view);
-            params.add(param);
+            _consume(buffer.slice());
         }
+    }
 
-        long t0 = System.nanoTime();
-        store.bulkAdd(params);
-        long nanos = System.nanoTime() - t0;
-        long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
-        AppMetrics.registry.histogram("kv-store:write").update(millis);
+    private static void _consume(ByteBuffer buffer) {
+        System.out.println(Functions.bb(buffer));
+        while (buffer.hasRemaining()) System.out.print(buffer.getInt() + "  ");
+        System.out.println();
     }
     //</editor-fold>
 }

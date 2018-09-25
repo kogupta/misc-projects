@@ -1,6 +1,7 @@
 package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
+import com.jakewharton.byteunits.BinaryByteUnit;
 import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.AppMetrics;
 import org.kogupta.diskStore.utils.BufferSize;
@@ -20,11 +21,12 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.READ;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class Writer implements Runnable {
     public static final LocalDateTime POISON_PILL = LocalDate.parse("1970-01-01").atStartOfDay();
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-    private static final int batchSize = (int) MINUTES.toMillis(1);
+    private static final int batchSize = (int) SECONDS.toMillis(1);
     private static final int signalRate = 2; // signal once every $d minute
 
     private final Path input;
@@ -38,7 +40,8 @@ public final class Writer implements Runnable {
     public Writer(Path input,
                   BufferSize size,
                   LmdbStore store,
-                  BlockingQueue<LocalDateTime> queue, BlockingQueue<LmdbStore.ReadRequest> deleteQ) {
+                  BlockingQueue<LocalDateTime> queue,
+                  BlockingQueue<LmdbStore.ReadRequest> deleteQ) {
         this.input = input;
         this.payloadSize = size.intSize();
         this.store = store;
@@ -50,6 +53,7 @@ public final class Writer implements Runnable {
     public void run() {
         // read a minute of data
         int len = payloadSize * batchSize;
+        logger.atInfo().log("Creating batch of size: %s", BinaryByteUnit.format(len));
 
         int batchCount = 0;
         try (ReadableByteChannel byteChannel = Files.newByteChannel(input, READ)) {
@@ -90,7 +94,7 @@ public final class Writer implements Runnable {
             ByteBuffer view = buffer.slice();
 
             // byteBuffer position madness!
-            buffer.position(Integer.BYTES);
+            buffer.position(buffer.position() + Integer.BYTES);
             long timestamp = buffer.getLong();
             String tenant = Functions.getString(buffer);
 

@@ -8,6 +8,7 @@ import joptsimple.OptionSet;
 import joptsimple.util.PathConverter;
 import org.kogupta.diskStore.utils.AppMetrics;
 import org.kogupta.diskStore.utils.BufferSize;
+import org.kogupta.diskStore.utils.Functions;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public final class RWTest {
 
     public static void main(String[] _args) throws IOException {
 //        Args args = Args.parse(_args);
-        Args args = Args.parse("--data-dir", "/tmp/fileSorter");
+        Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "1");
         start(args);
     }
 
@@ -37,7 +38,7 @@ public final class RWTest {
 
         File f = new File(dataDir.toFile(), "lmdb-index");
         Files.createDirectories(f.toPath());
-        LmdbStore store = new LmdbStore(f, tenantCount);
+        LmdbStore store = new LmdbStore(f, Functions.tenants(tenantCount));
 
         BlockingQueue<LocalDateTime> readerQ = new LinkedBlockingQueue<>(256);
         BlockingQueue<LmdbStore.ReadRequest> deleteQ = new LinkedBlockingQueue<>(256);

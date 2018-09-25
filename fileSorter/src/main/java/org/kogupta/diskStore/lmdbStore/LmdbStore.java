@@ -1,5 +1,6 @@
 package org.kogupta.diskStore.lmdbStore;
 
+import com.google.common.flogger.FluentLogger;
 import org.lmdbjava.*;
 
 import java.io.File;
@@ -11,6 +12,7 @@ import static java.nio.ByteOrder.nativeOrder;
 import static org.lmdbjava.DbiFlags.*;
 
 public final class LmdbStore {
+    private static final FluentLogger logger = FluentLogger.forEnclosingClass();
     private static final Comparator<ByteBuffer> cmp = Comparator.comparing(a -> a.order(nativeOrder()));
     private static final long hundredMB = 100 * 1024 * 1024;
 
@@ -29,18 +31,6 @@ public final class LmdbStore {
         key = ByteBuffer.allocateDirect(8).order(nativeOrder());
     }
 
-    private static KeyRange<ByteBuffer> createRange(long fromInclusive, long to) {
-        ByteBuffer start = bbTime(fromInclusive);
-        ByteBuffer stop = bbTime(to);
-        return KeyRange.closedOpen(start, stop);
-    }
-
-    private static ByteBuffer bbTime(long n) {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(Long.BYTES).order(nativeOrder());
-        buffer.putLong(n).flip();
-        return buffer;
-    }
-
     public void bulkAdd(List<WriteParam<ByteBuffer>> params) {
         try (Txn<ByteBuffer> txn = env.txnWrite()) {
             for (WriteParam<ByteBuffer> param : params) {
@@ -50,6 +40,7 @@ public final class LmdbStore {
                 getOrCreateDbi(param.tenant).put(txn, key, param.payload);
             }
             txn.commit();
+            logger.atInfo().log("Adding %d kv pairs to store", params.size());
         }
     }
 
@@ -105,7 +96,20 @@ public final class LmdbStore {
         return count;
     }
 
+    private static KeyRange<ByteBuffer> createRange(long fromInclusive, long to) {
+        ByteBuffer start = bbTime(fromInclusive);
+        ByteBuffer stop = bbTime(to);
+        return KeyRange.closedOpen(start, stop);
+    }
+
+    private static ByteBuffer bbTime(long n) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(Long.BYTES).order(nativeOrder());
+        buffer.putLong(n).flip();
+        return buffer;
+    }
+
     public static final class WriteParam<T> {
+
         final String tenant;
         final long timestamp;
         final T payload;

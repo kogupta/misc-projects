@@ -8,13 +8,16 @@ import org.kogupta.diskStore.utils.Functions;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.kogupta.diskStore.utils.Functions.toMillis;
 
 public final class Reader implements Runnable {
-    public static final LmdbStore.ReadRequest POISON_PILL = new LmdbStore.ReadRequest("--end-now--", 1, 2);
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    public static final LmdbStore.ReadRequest POISON_PILL = new LmdbStore.ReadRequest("--end-now--", 1, 2);
+
     private final BlockingQueue<LocalDateTime> readQ;
     private final BlockingQueue<LmdbStore.ReadRequest> deleteQ;
     private final LmdbStore store;
@@ -36,9 +39,11 @@ public final class Reader implements Runnable {
         try {
             while ((time = readQ.take()) != Writer.POISON_PILL) {
                 long to = toMillis(time);
-                long minus5 = toMillis(time.minusMinutes(5));
-                long minus10 = toMillis(time.minusMinutes(10));
+                long minus5 = to - MINUTES.toMillis(5);
+                long minus10 = to - MINUTES.toMillis(10);
+                logger.atInfo().log("Reading from [t-5] to [t], t=%s", time.toString());
                 read(minus5, to);
+                logger.atInfo().log("Reading from [t-10] to [t-5], t=%s", time.toString());
                 read(minus10, minus5);
             }
         } catch (InterruptedException e) {
@@ -60,7 +65,9 @@ public final class Reader implements Runnable {
 
             AppMetrics.newHistogram("kv-store:keyCount").update(NANOSECONDS.toMillis(t1 - t0));
             AppMetrics.newHistogram("kv-store:objectRead").update(NANOSECONDS.toMillis(t2 - t1));
+            logger.atInfo().log("    key count: %,d", n);
 
+            logger.atInfo().log("Sending delete request ...");
             deleteQ.add(r);
         }
     }

@@ -26,7 +26,8 @@ public final class RWTest {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
     public static void main(String[] _args) throws IOException {
-        Args args = Args.parse(_args);
+//        Args args = Args.parse(_args);
+        Args args = Args.parse("--data-dir", "/tmp/fileSorter");
         start(args);
     }
 
@@ -51,13 +52,16 @@ public final class RWTest {
         startThread(writer, "writer");
 
         Runtime.getRuntime().addShutdownHook(new Thread(metrics::stop));
+        metrics.report();
     }
 
     private static void startThread(Runnable r, String name) {
-        Thread readerT = new Thread(r);
-        readerT.setName(name);
-        readerT.setDaemon(false);
-        readerT.start();
+        Thread t = new Thread(r);
+        t.setName(name);
+        t.setDaemon(false);
+        t.start();
+
+        logger.atInfo().log("Started thread - %s", t.getName());
     }
 
     public static final class Args {

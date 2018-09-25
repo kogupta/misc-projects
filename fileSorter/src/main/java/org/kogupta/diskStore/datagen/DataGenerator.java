@@ -1,7 +1,9 @@
 package org.kogupta.diskStore.datagen;
 
 import com.google.common.flogger.FluentLogger;
+import com.jakewharton.byteunits.BinaryByteUnit;
 import org.kogupta.diskStore.Pojo;
+import org.kogupta.diskStore.utils.BufferSize;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,8 +12,8 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -42,18 +44,21 @@ public final class DataGenerator {
 
         buffer = createBB(args.bufferSize.intSize());
 
+        String[] tenants = tenants(args.tenantCount);
         for (long ts = start; ts < end; ts += _5Min) {
-            for (String tenant : tenants(args.tenantCount)) {
+            for (String tenant : tenants) {
                 waitAMinute(tenant, target, args, ts);
             }
         }
 
         logger.atInfo().log("Total # of events written: %,d", id);
 
-        logger.atInfo().log("Total size of file [%s] written: %,d",
+        logger.atInfo().log("Total size of file [%s] written: %s",
                             target.toAbsolutePath(),
-                            target.toFile().length());
+                            BinaryByteUnit.format(target.toFile().length()));
     }
+
+    private static final Set<String> _tenants = new LinkedHashSet<>();
 
     // wait 5 mins actually
     private static void waitAMinute(String tenant, Path target, Args args, long start) {
@@ -63,13 +68,12 @@ public final class DataGenerator {
 
         buffer.clear();
         int n = 0;
-        for (long ts = start; ts < end; ts++, n += bufSize) {
+        for (long ts = start; ts <= end; ts++, n += bufSize) {
             Pojo pojo = new Pojo();
             pojo.setId(id++);
             pojo.setTenantId(tenant);
             pojo.setTimestamp(ts);
-            LocalDateTime _payload = args.fromDate.plus(ts - start, ChronoUnit.MILLIS);
-            pojo.setPayload(_payload.toString());
+            pojo.setPayload(fromMillis(ts).toString());
 
             writeToBB(pojo, buffer);
             buffer.position(n);
@@ -102,6 +106,7 @@ public final class DataGenerator {
     }
 
     private static void write(Path target, ByteBuffer buffer) {
+//        checkForTenants(buffer.slice());
         logger.atInfo().log("Writing to file: %s", bb(buffer));
 
         try (SeekableByteChannel channel = Files.newByteChannel(target, CREATE, WRITE, APPEND)) {
@@ -111,5 +116,20 @@ public final class DataGenerator {
             logger.atSevere().withCause(e).log("Error while writing to target binary file");
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static void checkForTenants(ByteBuffer buffer) {
+        final int end = buffer.limit(), stride = BufferSize.OneK.intSize();
+        for (int start = 0; start != end; start = buffer.limit()) {
+            int delta = Math.min(end - start, stride);
+            buffer.position(start).limit(start + delta);
+
+            ByteBuffer bb = buffer.slice();
+            bb.position(Integer.BYTES + Long.BYTES);
+            String s = getString(bb);
+            _tenants.add(s);
+        }
+
+        System.out.println("Tenants: " + _tenants);
     }
 }

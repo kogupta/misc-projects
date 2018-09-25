@@ -12,21 +12,23 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.READ;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.kogupta.diskStore.utils.Functions.getString;
 
 public final class Writer implements Runnable {
     public static final LocalDateTime POISON_PILL = LocalDate.parse("1970-01-01").atStartOfDay();
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-    private static final int batchSize = (int) SECONDS.toMillis(1);
-    private static final int signalRate = 2; // signal once every $d minute
+    private static final int batchSize = (int) MINUTES.toMillis(1);
+    private static final int signalRate = 5; // signal once every $d minute
 
     private final Path input;
     private final int payloadSize;
@@ -68,8 +70,7 @@ public final class Writer implements Runnable {
                 if (batchCount % signalRate == 0) {
                     logger.atInfo().log("    sending read message");
                     long timestamp = buffer.getLong(Integer.BYTES);
-                    
-                    readQ.add();
+                    readQ.add(fromMillis(timestamp));
                 }
 
                 buffer.clear();

@@ -30,7 +30,7 @@ public final class RWTest {
 
     public static void main(String[] _args) throws IOException, InterruptedException {
 //        Args args = Args.parse(_args);
-        Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "1");
+        Args args = Args.parse("--data-dir", "/tmp/fileSorter", "--numTenants", "10");
         start(args);
     }
 

@@ -1,6 +1,5 @@
 package org.kogupta.diskStore.datagen;
 
-import org.kogupta.diskStore.lmdbStore.RWTest;
 import org.kogupta.diskStore.utils.BufferSize;
 import org.testng.annotations.Test;
 
@@ -10,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 public class DataGeneratorTest {
     @Test
@@ -29,7 +27,5 @@ public class DataGeneratorTest {
 
 //        RWTest.Args testArgs = RWTest.Args.fromDatagenArgs(args);
 //        RWTest.start(testArgs);
-//
-//        TimeUnit.MINUTES.sleep(1);
     }
 }

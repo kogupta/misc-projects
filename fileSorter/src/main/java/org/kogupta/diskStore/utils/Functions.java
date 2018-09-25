@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Consumer;
 
 public enum Functions {
     ;
@@ -85,5 +86,15 @@ public enum Functions {
     public static LocalDateTime fromMillis(long millis) {
         OffsetDateTime instant = Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC);
         return instant.toLocalDateTime();
+    }
+
+    public static void bbIterator(ByteBuffer buffer, int stride, Consumer<ByteBuffer> consumer) {
+        final int end = buffer.limit();
+
+        for (int start = 0; start != end; start = buffer.limit()) {
+            int delta = Math.min(end - start, stride);
+            buffer.position(start).limit(start + delta);
+            consumer.accept(buffer.slice());
+        }
     }
 }

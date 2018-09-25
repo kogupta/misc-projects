@@ -83,56 +83,52 @@ public final class LmdbStore {
     }
 
     public <T> List<T> read(ReadRequest req, Function<ByteBuffer, T> converter) {
-        KeyRange<ByteBuffer> range = createRange(req.fromInclusive, req.to);
-
-        List<T> xs = new ArrayList<>();
-        try (Txn<ByteBuffer> txnRead = env.txnRead();
-             CursorIterator<ByteBuffer> itr = getOrCreateDbi(req.tenant).iterate(txnRead, range, cmp)) {
-            while (itr.hasNext()) {
-                CursorIterator.KeyVal<ByteBuffer> kv = itr.next();
-                ByteBuffer buffer = kv.val();
-                xs.add(converter.apply(buffer));
-            }
-        }
-        return xs;
-    }
-
-    public int countKeysInRange(ReadRequest req) {
-        KeyRange<ByteBuffer> range = createRange(req.fromInclusive, req.to);
-        int count = 0;
-
         Dbi<ByteBuffer> dbi = getOrCreateDbi(req.tenant);
-
-//        try (Txn<ByteBuffer> txnRead = env.txnRead();
-//             CursorIterator<ByteBuffer> itr = dbi.iterate(txnRead, range, cmp)) {
-//            for (CursorIterator.KeyVal<ByteBuffer> ignore : itr.iterable()) {
-//                count++;
-//            }
-//        }
-
-//        try (Txn<ByteBuffer> txnRead = env.txnRead();
-//             CursorIterator<ByteBuffer> curItr = dbi.iterate(txnRead, KeyRange.all())) {
-//            for (CursorIterator.KeyVal<ByteBuffer> ignore : curItr.iterable()) {
-//                count++;
-//            }
-//        }
 
         logger.atInfo().log("Start: %s, end: %s",
                             fromMillis(req.fromInclusive),
                             fromMillis(req.to));
 
+        List<T> xs = new ArrayList<>();
+        ByteBuffer from = bbTime(req.fromInclusive);
+
         try (Txn<ByteBuffer> txnRead = env.txnRead();
              Cursor<ByteBuffer> c = dbi.openCursor(txnRead)) {
-            if (!c.get(range.getStart(), GetOp.MDB_SET_RANGE)) {
+            if (!c.get(from, GetOp.MDB_SET_RANGE)) {
+                return Collections.emptyList();
+            }
+
+            long cur = c.key().order(nativeOrder()).getLong();
+            while (Long.compare(cur, req.to) < 0) {
+                xs.add(converter.apply(c.val()));
+                if (!c.next()) return xs;
+                cur = c.key().order(nativeOrder()).getLong();
+            }
+        }
+
+        return xs;
+    }
+
+    public int countKeysInRange(ReadRequest req) {
+        Dbi<ByteBuffer> dbi = getOrCreateDbi(req.tenant);
+
+        logger.atInfo().log("Start: %s, end: %s",
+                            fromMillis(req.fromInclusive),
+                            fromMillis(req.to));
+
+        ByteBuffer from = bbTime(req.fromInclusive);
+        try (Txn<ByteBuffer> txnRead = env.txnRead();
+             Cursor<ByteBuffer> c = dbi.openCursor(txnRead)) {
+            if (!c.get(from, GetOp.MDB_SET_RANGE)) {
                 return 0;
             }
 
             long cur = c.key().order(nativeOrder()).getLong();
-            int n = 1;
+            int n = 0;
             while (Long.compare(cur, req.to) < 0) {
                 n++;
                 if (!c.next()) return n;
-                cur = c.key().getLong();
+                cur = c.key().order(nativeOrder()).getLong();
             }
 
             return n;

@@ -2,6 +2,7 @@ package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
 import com.google.common.io.MoreFiles;
+import org.kogupta.diskStore.Pojo;
 import org.kogupta.diskStore.lmdbStore.LmdbStore.ReadRequest;
 import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.BufferSize;
@@ -92,6 +93,11 @@ public class LmdbStoreTest {
                 int n = store.countKeysInRange(req);
                 assertTrue(n > 0);
                 assertEquals(n, batchSize);
+
+                List<Pojo> xs = store.read(req, Functions::fromByteBuffer);
+                assertNotNull(xs);
+                assertFalse(xs.isEmpty());
+                assertEquals(xs.size(), batchSize);
             }
         }
     }
@@ -110,8 +116,8 @@ public class LmdbStoreTest {
             long timestamp = buffer.getLong();
             String tenant = getString(buffer);
 
-            acc.compute(tenant,
-                        (s, minMax) -> minMax == null ? new MinMax() : minMax.add(timestamp));
+            acc.compute(tenant, (s, minMax) ->
+                    minMax == null ? new MinMax().add(timestamp) : minMax.add(timestamp));
 
             WriteParam<ByteBuffer> param = new WriteParam<>(tenant, timestamp, view);
             params.add(param);

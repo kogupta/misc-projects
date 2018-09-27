@@ -2,7 +2,7 @@ Currently data is stored as:
   - 1 `Env` \[a directory]
   - a `Dbi` for each tenant
     - for each `Dbi`/tenant, create a map of `timestamp -> data`.
-  - *DOES NOT* support multiple data points for each index key \[timestamp to millisecond precision currently]
+  - __*DOES NOT*__ support multiple data points for each index key \[timestamp to millisecond precision currently]
 
 Proposed change: 
   - create separate stores for data and index
@@ -31,14 +31,19 @@ Proposed change:
               │    └── index (timestamp -> pk1, pk2, ....)
               └── ...
       ```
+---
 
-    Input data: 
-      - 1k payload
-      - 5 tenants
-      - 30 mins of generated data, 1 data point for each milli-second
-      - ~9 gb data
+Input data: 
+  - 1k payload
+  - 5 tenants
+  - 30 mins of generated data, 1 data point for each milli-second
+  - ~9 gb data
 
-    Read throughput: 
-      - worst case:
-        - 200ms to read 5 min worth of data
-        - 5 min => 300 mb of data/tenant, 300k records \[1k payload size]
+
+Read throughput: 
+  - worst case: 
+    - 200ms to read 5 min worth of data
+    - 5 min => 300 mb of data/tenant, 300k records \[1k payload size]
+  - *Note*: the read use is probably too-optimistic
+    - the data set used is smaller than the system-memory
+    - the pages which contain the data is still in OS page cache because of less load in system

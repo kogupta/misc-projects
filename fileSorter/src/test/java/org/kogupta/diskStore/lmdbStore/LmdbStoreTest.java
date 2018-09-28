@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.nio.file.StandardOpenOption.READ;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.kogupta.diskStore.utils.Functions.getString;
 import static org.kogupta.diskStore.utils.Functions.toMillis;
@@ -36,7 +37,7 @@ public class LmdbStoreTest {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
     private static final String[] tenants = Functions.tenants(10);
     private static final Path path = Paths.get("/tmp/fileSorter/lmdb-test");
-    private static final int batchSize = (int) SECONDS.toMillis(1);
+    private static final int batchSize = (int) MINUTES.toMillis(10);
     private static final int payload = BufferSize.OneK.intSize();
 
     private LmdbStore store;

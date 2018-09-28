@@ -12,6 +12,7 @@ import java.util.function.Function;
 import static java.nio.ByteOrder.nativeOrder;
 import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
+import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
 import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
 import static org.lmdbjava.EnvFlags.*;
 
@@ -32,6 +33,9 @@ public final class LmdbStore {
                 .open(dir, MDB_WRITEMAP, MDB_NOSYNC, MDB_MAPASYNC);
         databases = new HashMap<>();
         key = ByteBuffer.allocateDirect(8).order(nativeOrder());
+
+        // max VALUE size when MDB_DUPSORT is used
+        logger.atInfo().log("Env max key size: %d", env.getMaxKeySize());
 
         // pre-create dbi
         for (String tenant : tenants) {

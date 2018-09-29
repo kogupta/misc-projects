@@ -43,7 +43,7 @@ public final class RWTest {
         LmdbStore store = new LmdbStore(f, Functions.tenants(tenantCount));
 
         BlockingQueue<LocalDateTime> readerQ = new LinkedBlockingQueue<>();
-        BlockingQueue<LmdbStore.ReadRequest> deleteQ = new LinkedBlockingQueue<>();
+        BlockingQueue<ReadRequest> deleteQ = new LinkedBlockingQueue<>();
 
         Path input = new File(dataDir.toFile(), "data.bin").toPath();
         Writer writer = new Writer(input, args.size, store, readerQ, deleteQ);

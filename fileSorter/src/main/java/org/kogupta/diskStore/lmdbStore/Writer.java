@@ -2,7 +2,6 @@ package org.kogupta.diskStore.lmdbStore;
 
 import com.google.common.flogger.FluentLogger;
 import com.jakewharton.byteunits.BinaryByteUnit;
-import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.AppMetrics;
 import org.kogupta.diskStore.utils.BufferSize;
 import org.kogupta.diskStore.utils.Functions;
@@ -34,7 +33,7 @@ public final class Writer implements Runnable {
     private final int payloadSize;
     private final LmdbStore store;
     private final BlockingQueue<LocalDateTime> readQ;
-    private final BlockingQueue<LmdbStore.ReadRequest> deleteQ;
+    private final BlockingQueue<ReadRequest> deleteQ;
 
     private boolean noMoreDeletes = false;
 
@@ -42,7 +41,7 @@ public final class Writer implements Runnable {
                   BufferSize size,
                   LmdbStore store,
                   BlockingQueue<LocalDateTime> queue,
-                  BlockingQueue<LmdbStore.ReadRequest> deleteQ) {
+                  BlockingQueue<ReadRequest> deleteQ) {
         this.input = input;
         this.payloadSize = size.intSize();
         this.store = store;
@@ -117,7 +116,7 @@ public final class Writer implements Runnable {
     private void deleteRemaining() {
         logger.atInfo().log("Deleting remaining delete requests ...");
 
-        LmdbStore.ReadRequest r;
+        ReadRequest r;
         try {
             while ((r = deleteQ.take()) != Reader.POISON_PILL) {
                 delete(r);
@@ -127,7 +126,7 @@ public final class Writer implements Runnable {
         }
     }
 
-    private void delete(LmdbStore.ReadRequest r) {
+    private void delete(ReadRequest r) {
 //        logger.atInfo().log("Executing delete ... ");
 //        long t0 = System.nanoTime();
 //        int n = store.deleteInRange(r);
@@ -139,7 +138,7 @@ public final class Writer implements Runnable {
     private void deleteIfAny() {
         if (noMoreDeletes) return;
 
-        LmdbStore.ReadRequest r = deleteQ.poll();
+        ReadRequest r = deleteQ.poll();
         if (r == null) return;
         if (r == Reader.POISON_PILL) {
             noMoreDeletes = true;

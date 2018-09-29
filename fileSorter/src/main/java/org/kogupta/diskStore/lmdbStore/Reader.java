@@ -16,15 +16,15 @@ import static org.kogupta.diskStore.utils.Functions.toMillis;
 
 public final class Reader implements Runnable {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-    public static final LmdbStore.ReadRequest POISON_PILL = new LmdbStore.ReadRequest("--end-now--", 1, 2);
+    public static final ReadRequest POISON_PILL = new ReadRequest("--end-now--", 1, 2);
 
     private final BlockingQueue<LocalDateTime> readQ;
-    private final BlockingQueue<LmdbStore.ReadRequest> deleteQ;
+    private final BlockingQueue<ReadRequest> deleteQ;
     private final LmdbStore store;
     private final String[] tenants;
 
     public Reader(BlockingQueue<LocalDateTime> queue,
-                  BlockingQueue<LmdbStore.ReadRequest> deleteQ,
+                  BlockingQueue<ReadRequest> deleteQ,
                   LmdbStore store,
                   int tenantCount) {
         this.readQ = queue;
@@ -57,7 +57,7 @@ public final class Reader implements Runnable {
 
     private void read(long from, long to) {
         for (String tenant : tenants) {
-            LmdbStore.ReadRequest r = new LmdbStore.ReadRequest(tenant, from, to);
+            ReadRequest r = new ReadRequest(tenant, from, to);
             long t0 = System.nanoTime();
             int n = store.countKeysInRange(r);
             AppMetrics.newHistogram("kv-store:keyCount")

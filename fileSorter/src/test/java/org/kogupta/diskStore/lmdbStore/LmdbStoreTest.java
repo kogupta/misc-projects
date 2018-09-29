@@ -3,8 +3,6 @@ package org.kogupta.diskStore.lmdbStore;
 import com.google.common.flogger.FluentLogger;
 import com.google.common.io.MoreFiles;
 import org.kogupta.diskStore.Pojo;
-import org.kogupta.diskStore.lmdbStore.LmdbStore.ReadRequest;
-import org.kogupta.diskStore.lmdbStore.LmdbStore.WriteParam;
 import org.kogupta.diskStore.utils.BufferSize;
 import org.kogupta.diskStore.utils.Functions;
 import org.testng.annotations.AfterTest;
@@ -28,7 +26,6 @@ import java.util.Map;
 
 import static java.nio.file.StandardOpenOption.READ;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.kogupta.diskStore.utils.Functions.getString;
 import static org.kogupta.diskStore.utils.Functions.toMillis;
 import static org.testng.Assert.*;

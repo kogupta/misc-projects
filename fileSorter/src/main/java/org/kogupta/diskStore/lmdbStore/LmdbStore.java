@@ -12,7 +12,6 @@ import java.util.function.Function;
 import static java.nio.ByteOrder.nativeOrder;
 import static org.kogupta.diskStore.utils.Functions.fromMillis;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
-import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
 import static org.lmdbjava.DbiFlags.MDB_INTEGERKEY;
 import static org.lmdbjava.EnvFlags.*;
 
@@ -152,30 +151,4 @@ public final class LmdbStore {
         return buffer;
     }
 
-    public static final class WriteParam<T> {
-
-        final String tenant;
-        final long timestamp;
-        final T payload;
-
-        public WriteParam(String tenant, long timestamp, T payload) {
-            this.tenant = tenant;
-            this.timestamp = timestamp;
-            this.payload = payload;
-        }
-    }
-
-    public static final class ReadRequest {
-        final String tenant;
-        final long fromInclusive;
-        final long to;
-
-        public ReadRequest(String tenant, long fromInclusive, long to) {
-            assert fromInclusive < to;
-
-            this.tenant = tenant;
-            this.fromInclusive = fromInclusive;
-            this.to = to;
-        }
-    }
 }

@@ -29,7 +29,13 @@ public final class Pojo2 {
 
     public void setTime(String time) { this.time = time; }
 
-    public void writeToBB(ByteBuffer buffer) {
+    public ByteBuffer writeToBB(ByteBuffer buffer) {
         // TODO
+        return buffer;
+    }
+
+    public static Pojo2 readFromBB(ByteBuffer buffer) {
+        // TODO
+        return new Pojo2();
     }
 }

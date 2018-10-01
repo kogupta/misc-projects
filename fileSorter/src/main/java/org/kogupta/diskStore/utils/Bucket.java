@@ -13,6 +13,7 @@ public final class Bucket {
     public final int hour;
     public final String hourString;
     public final int minute;
+    public final int second;
 
     private Bucket(long millis) {
         OffsetDateTime time = Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC);
@@ -22,6 +23,7 @@ public final class Bucket {
         this.hour = time.getHour();
         this.hourString = hours[hour];
         this.minute = time.getMinute();
+        this.second = time.getSecond();
     }
 
     @Override

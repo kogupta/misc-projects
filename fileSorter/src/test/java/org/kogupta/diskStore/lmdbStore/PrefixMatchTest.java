@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static java.nio.ByteBuffer.allocateDirect;
+import static java.nio.ByteBuffer.wrap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.DbiFlags.MDB_DUPSORT;
@@ -104,57 +105,56 @@ public class PrefixMatchTest {
         // 1db   => p, q, r
         // 2host => 2a, 2b, 2c
         // 3db   => 3p, 3q, 3r
-        ByteBuffer key = allocateDirect(12);
-        key.putInt(1).put(host).flip();
-        put(dbi, key, "a", "b", "c");
+        put(dbi, key(1, "host"), "a", "b", "c");
+        put(dbi, key(1, "db"), "p", "q", "r");
+        put(dbi, key(2, "host"), "2a", "2b", "2c");
+        put(dbi, key(3, "db"), "2a", "2b", "2c");
+        put(dbi, key(5, "host"), "5a", "5b", "5c");
 
-        key.putInt(2).put(host).flip();
-        put(dbi, key, "2a", "2b", "2c");
+        // find all "host"
 
-        KeyRange<ByteBuffer> range = KeyRange.atLeast(key);
+        ByteBuffer from = key(1, "host");
+        ByteBuffer to = key(5, "host");
+        KeyRange<ByteBuffer> range = KeyRange.closed(from, to);
+
         try (Txn<ByteBuffer> txn = env.txnRead();
              CursorIterator<ByteBuffer> itr = dbi.iterate(txn, range)) {
+            ByteBuffer _host = wrap(host);
+
+            int[] expectedIntKeys = {1, 2, 5};
             int count = 0;
+
             for (CursorIterator.KeyVal<ByteBuffer> kv : itr.iterable()) {
-                ByteBuffer k = kv.key();
-                oneOf(k.getInt(), 1, 2);
-                assertEquals(UTF_8.decode(k).toString(), "host");
+                ByteBuffer key = kv.key();
+                key.position(4);
 
-                oneOf(UTF_8.decode(kv.val()).toString(), "2a", "2b", "2c");
+                if (key.compareTo(_host) != 0) continue;
 
+                assertEquals(UTF_8.decode(key).toString(), "host");
+                assertTrue(contains(expectedIntKeys, key.getInt(0)));
                 count++;
             }
 
-            assertEquals(count, 3);
+            assertEquals(count, expectedIntKeys.length * 3);
         }
+    }
 
-        ByteBuffer from = allocateDirect(12);
-        from.putInt(1).put(host).flip();
-        ByteBuffer to = allocateDirect(12);
-        to.putInt(2).put(host).flip();
-
-        try (Txn<ByteBuffer> txn = env.txnRead();
-             CursorIterator<ByteBuffer> itr = dbi.iterate(txn, KeyRange.closed(from, to))) {
-            int count = 0;
-            for (CursorIterator.KeyVal<ByteBuffer> kv : itr.iterable()) {
-                int k = kv.key().getInt();
-                oneOf(k, 1, 2);
-                assertEquals(UTF_8.decode(kv.key()).toString(), "host");
-
-                if (k == 1) oneOf(UTF_8.decode(kv.val()).toString(), "a", "b", "c");
-                if (k == 2) oneOf(UTF_8.decode(kv.val()).toString(), "2a", "2b", "2c");
-
-                count++;
-            }
-
-            assertEquals(count, 6);
-        }
+    private static ByteBuffer bb(int n) {
+        ByteBuffer buffer = allocateDirect(4);
+        buffer.putInt(n).flip();
+        return buffer;
     }
 
     private static ByteBuffer key(int n, String s) {
         ByteBuffer bb = allocateDirect(12);
         bb.putInt(n).put(s.getBytes(UTF_8)).flip();
         return bb;
+    }
+
+    private static boolean contains(int[] expected, int actual) {
+        for (int n : expected) if (n == actual) return true;
+
+        return false;
     }
 
     private static void oneOf(int actual, int... expected) {

@@ -49,6 +49,15 @@ public final class Store {
         return new PartitionedTenantStore(dir, t.tenant, t.date);
     }
 
+    public List<Pojo2> read(long from, long to, String secondaryKey) {
+
+
+    }
+
+    public void dropDb(int hour) {
+
+    }
+
     private static final class TenantDatePair {
         final String tenant;
         final String date;

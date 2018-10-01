@@ -3,6 +3,7 @@ package org.kogupta.diskStore.lmdbStore.v2;
 import com.google.common.flogger.FluentLogger;
 import org.kogupta.diskStore.Pojo2;
 import org.kogupta.diskStore.utils.Bucket;
+import org.kogupta.diskStore.utils.Consumer3;
 import org.kogupta.diskStore.utils.FileUtils;
 import org.lmdbjava.*;
 
@@ -15,7 +16,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
 import static com.jakewharton.byteunits.BinaryByteUnit.GIBIBYTES;
 import static java.nio.ByteBuffer.allocateDirect;
@@ -78,80 +78,54 @@ public final class PartitionedTenantStore {
     }
 
     public int countKeys(long from, long to, String secondaryKey) {
-        assert from < to;
-
-        int fromIdx = Bucket.create(from).hour;
-        int toIdx = Bucket.create(to).hour;
-
-        byte[] _bytes = secondaryKey.getBytes(UTF_8);
-        ByteBuffer a = lookupKey(from, _bytes);
-        ByteBuffer b = lookupKey(to, _bytes);
-        KeyRange<ByteBuffer> range = closedOpen(a, b);
-
-
         AtomicInteger n = new AtomicInteger();
+        Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer =
+                (txn, bb, dbi) -> n.incrementAndGet();
 
-        for (int i = fromIdx; i <= toIdx; i++)
-            _read(secondaryKey, range, dataDbis[i], indices[i], (txn, bb) -> n.getAndIncrement());
+        _readQuery(from, to, secondaryKey, consumer);
 
         return n.get();
     }
 
     public List<Pojo2> read(long from, long to, String secondaryKey) {
-        assert from < to;
-
-        int fromIdx = Bucket.create(from).hour;
-        int toIdx = Bucket.create(to).hour;
-
-        byte[] _bytes = secondaryKey.getBytes(UTF_8);
-        ByteBuffer a = lookupKey(from, _bytes);
-        ByteBuffer b = lookupKey(to, _bytes);
-        KeyRange<ByteBuffer> range = closedOpen(a, b);
-
         List<Pojo2> result = new ArrayList<>();
-        for (int i = fromIdx; i <= toIdx; i++) {
-            Dbi<ByteBuffer> dataDbi = dataDbis[i];
-            _read(secondaryKey, range, dataDbi, indices[i], consumer(dataDbi, result));
-        }
-
-        return result;
-    }
-
-    private void read2(long from,
-                       long to,
-                       String secondaryKey,
-                       BiConsumer<Txn<ByteBuffer>, ByteBuffer> consumer) {
-        assert from < to;
-
-        int fromIdx = Bucket.create(from).hour;
-        int toIdx = Bucket.create(to).hour;
-
-        byte[] _bytes = secondaryKey.getBytes(UTF_8);
-        ByteBuffer a = lookupKey(from, _bytes);
-        ByteBuffer b = lookupKey(to, _bytes);
-        KeyRange<ByteBuffer> range = closedOpen(a, b);
-
-        for (int i = fromIdx; i <= toIdx; i++) {
-            Dbi<ByteBuffer> dataDbi = dataDbis[i];
-            _read(secondaryKey, range, dataDbi, indices[i], consumer);
-        }
-    }
-
-    private static BiConsumer<Txn<ByteBuffer>, ByteBuffer> consumer(Dbi<ByteBuffer> dbi,
-                                                                    List<Pojo2> result) {
-        return (txn, bb) -> {
+        Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer = (txn, bb, dbi) -> {
             bb.position(0).limit(8);
             ByteBuffer bb2 = dbi.get(txn, bb.slice());
             Pojo2 pojo2 = Pojo2.readFromBB(bb2);
             result.add(pojo2);
         };
+
+        _readQuery(from, to, secondaryKey, consumer);
+
+        return result;
     }
 
-    private void _read(String secondaryKey,
-                       KeyRange<ByteBuffer> range,
-                       Dbi<ByteBuffer> dataDbi,
-                       Dbi<ByteBuffer> index,
-                       BiConsumer<Txn<ByteBuffer>, ByteBuffer> consumer) {
+    private void _readQuery(long from,
+                            long to,
+                            String secondaryKey,
+                            Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer) {
+        assert from < to;
+
+        int fromIdx = Bucket.create(from).hour;
+        int toIdx = Bucket.create(to).hour;
+
+        byte[] _bytes = secondaryKey.getBytes(UTF_8);
+        ByteBuffer a = lookupKey(from, _bytes);
+        ByteBuffer b = lookupKey(to, _bytes);
+        KeyRange<ByteBuffer> range = closedOpen(a, b);
+
+        for (int i = fromIdx; i <= toIdx; i++) {
+            Dbi<ByteBuffer> dataDbi = dataDbis[i];
+            _read2(secondaryKey, range, dataDbi, indices[i], consumer);
+        }
+    }
+
+    private void _read2(String secondaryKey,
+                        KeyRange<ByteBuffer> range,
+                        Dbi<ByteBuffer> dataDbi,
+                        Dbi<ByteBuffer> index,
+                        Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer) {
         try (Txn<ByteBuffer> txn = env.txnRead();
              CursorIterator<ByteBuffer> idxItr = index.iterate(txn, range)) {
             for (CursorIterator.KeyVal<ByteBuffer> kv : idxItr.iterable()) {
@@ -159,7 +133,7 @@ public final class PartitionedTenantStore {
                 key.position(8);
                 String _secKey = UTF_8.decode(key).toString();
                 if (Objects.equals(_secKey, secondaryKey)) {
-                    consumer.accept(txn, key);
+                    consumer.accept(txn, key, dataDbi);
                 }
             }
         }

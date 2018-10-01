@@ -5,10 +5,13 @@ import org.kogupta.diskStore.Pojo2;
 import org.kogupta.diskStore.utils.Bucket;
 
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
+import static java.time.ZoneOffset.UTC;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.groupingBy;
 
 public final class Store {
@@ -36,6 +39,7 @@ public final class Store {
         }
     }
 
+
     // tenant aware addition
     public void bulkAdd(String tenant, String date, List<Pojo2> xs) {
         if (xs == null || xs.isEmpty()) return;
@@ -49,16 +53,63 @@ public final class Store {
         return new PartitionedTenantStore(dir, t.tenant, t.date);
     }
 
-    public List<Pojo2> read(long from, long to, String secondaryKey) {
+    public List<Pojo2> read(long from, long to, String tenant, String secondaryKey) {
+        assert from < to;
 
+        LocalDate a = toLocalDate(from);
+        LocalDate b = toLocalDate(to);
 
+        if (a.equals(b)) {
+            String date = asDate(a);
+            TenantDatePair tdPair = TenantDatePair.of(tenant, date);
+            PartitionedTenantStore store = date2Store.get(tdPair);
+            if (store == null) {
+                return Collections.emptyList();
+            }
+
+            return store.read(from, to, secondaryKey);
+        } else {
+            List<Pojo2> result = new ArrayList<>();
+            long n = from;
+            LocalDate i = a;
+            while (!i.equals(b)) {
+                long endOfDay = endOfDay(i);
+                List<Pojo2> xs = read(n, endOfDay, tenant, secondaryKey);
+                result.addAll(xs);
+                n = endOfDay + 1;
+                i = i.plusDays(1);
+            }
+
+            return result;
+        }
+    }
+
+    private static String asDate(LocalDate a) {
+        String mon = a.getMonth().name().substring(0, 3);
+        return a.getYear() + "-" + mon + "-" + a.getDayOfMonth();
     }
 
     public void dropDb(int hour) {
 
     }
 
+    static LocalDate toLocalDate(long millis) {
+        return Instant.ofEpochMilli(millis).atOffset(UTC).toLocalDate();
+    }
+
+    static long toEpochMillis(LocalDate date) {
+        return date.atStartOfDay().toInstant(UTC).toEpochMilli();
+    }
+
+    private static final long oneMilli = MILLISECONDS.toNanos(1);
+
+    static long endOfDay(LocalDate date) {
+        LocalDateTime time = date.plusDays(1).atStartOfDay().minusNanos(oneMilli);
+        return time.toInstant(UTC).toEpochMilli();
+    }
+
     private static final class TenantDatePair {
+
         final String tenant;
         final String date;
 

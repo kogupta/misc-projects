@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.kogupta.diskStore.Pojo;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -13,6 +12,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public enum Functions {
     ;
@@ -28,7 +29,7 @@ public enum Functions {
     }
 
     public static void putString(ByteBuffer buffer, String s) {
-        byte[] _tenant = s.getBytes(StandardCharsets.ISO_8859_1);
+        byte[] _tenant = s.getBytes(UTF_8);
         buffer.putInt(_tenant.length);
         buffer.put(_tenant);
     }
@@ -37,7 +38,7 @@ public enum Functions {
         int len = buffer.getInt();
         byte[] bytes = new byte[len];
         buffer.get(bytes);
-        return new String(bytes, StandardCharsets.ISO_8859_1);
+        return new String(bytes, UTF_8);
     }
 
     public static void writeToBB(Pojo pojo, ByteBuffer buffer) {

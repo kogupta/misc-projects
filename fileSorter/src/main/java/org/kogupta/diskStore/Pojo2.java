@@ -2,6 +2,9 @@ package org.kogupta.diskStore;
 
 import java.nio.ByteBuffer;
 
+import static org.kogupta.diskStore.utils.Functions.getString;
+import static org.kogupta.diskStore.utils.Functions.putString;
+
 public final class Pojo2 {
     private String uuid;
     private String tenant;
@@ -30,12 +33,23 @@ public final class Pojo2 {
     public void setTime(String time) { this.time = time; }
 
     public ByteBuffer writeToBB(ByteBuffer buffer) {
-        // TODO
+        putString(buffer, uuid);
+        buffer.putLong(timestamp);
+        putString(buffer, tenant);
+        putString(buffer, secondaryKey);
+        putString(buffer, time);
+
         return buffer;
     }
 
     public static Pojo2 readFromBB(ByteBuffer buffer) {
-        // TODO
-        return new Pojo2();
+        Pojo2 result = new Pojo2();
+        result.setUuid(getString(buffer));
+        result.setTimestamp(buffer.getLong());
+        result.setTenant(getString(buffer));
+        result.setSecondaryKey(getString(buffer));
+        result.setTime(getString(buffer));
+
+        return result;
     }
 }

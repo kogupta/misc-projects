@@ -47,7 +47,7 @@ public final class PartitionedTenantStore {
         indexKey = allocateDirect(64);
     }
 
-    public void bulkAdd(List<Pojo2> xs) {
+    void bulkAdd(List<Pojo2> xs) {
         try (Txn<ByteBuffer> txn = env.txnWrite()) {
             for (Pojo2 x : xs) {
                 Bucket bucket = Bucket.create(x.getTimestamp());
@@ -77,7 +77,7 @@ public final class PartitionedTenantStore {
         logger.atInfo().log("Added %,d kv pairs to env store", xs.size());
     }
 
-    public int countKeys(long from, long to, String secondaryKey) {
+    int countKeys(long from, long to, String secondaryKey) {
         AtomicInteger n = new AtomicInteger();
         Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer =
                 (txn, bb, dbi) -> n.incrementAndGet();
@@ -87,11 +87,10 @@ public final class PartitionedTenantStore {
         return n.get();
     }
 
-    public List<Pojo2> read(long from, long to, String secondaryKey) {
+    List<Pojo2> read(long from, long to, String secondaryKey) {
         List<Pojo2> result = new ArrayList<>();
         Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer = (txn, bb, dbi) -> {
-            bb.position(0).limit(8);
-            ByteBuffer bb2 = dbi.get(txn, bb.slice());
+            ByteBuffer bb2 = dbi.get(txn, bb);
             Pojo2 pojo2 = Pojo2.readFromBB(bb2);
             result.add(pojo2);
         };
@@ -117,23 +116,16 @@ public final class PartitionedTenantStore {
 
         for (int i = fromIdx; i <= toIdx; i++) {
             Dbi<ByteBuffer> dataDbi = dataDbis[i];
-            _read2(secondaryKey, range, dataDbi, indices[i], consumer);
-        }
-    }
-
-    private void _read2(String secondaryKey,
-                        KeyRange<ByteBuffer> range,
-                        Dbi<ByteBuffer> dataDbi,
-                        Dbi<ByteBuffer> index,
-                        Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer) {
-        try (Txn<ByteBuffer> txn = env.txnRead();
-             CursorIterator<ByteBuffer> idxItr = index.iterate(txn, range)) {
-            for (CursorIterator.KeyVal<ByteBuffer> kv : idxItr.iterable()) {
-                ByteBuffer key = kv.key();
-                key.position(8);
-                String _secKey = UTF_8.decode(key).toString();
-                if (Objects.equals(_secKey, secondaryKey)) {
-                    consumer.accept(txn, key, dataDbi);
+            try (Txn<ByteBuffer> txn = env.txnRead();
+                 CursorIterator<ByteBuffer> idxItr = indices[i].iterate(txn, range)) {
+                for (CursorIterator.KeyVal<ByteBuffer> kv : idxItr.iterable()) {
+                    ByteBuffer key = kv.key();
+                    key.position(8);
+                    String _secKey = UTF_8.decode(key).toString();
+                    if (Objects.equals(_secKey, secondaryKey)) {
+                        ByteBuffer uuid = kv.val();
+                        consumer.accept(txn, uuid, dataDbi);
+                    }
                 }
             }
         }

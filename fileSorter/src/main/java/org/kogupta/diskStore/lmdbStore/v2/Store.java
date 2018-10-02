@@ -84,6 +84,36 @@ public final class Store {
         }
     }
 
+    public int countKeys(long from, long to, String tenant, String secondaryKey) {
+        assert from < to;
+
+        LocalDate a = toLocalDate(from);
+        LocalDate b = toLocalDate(to);
+
+        if (a.equals(b)) {
+            String date = asDate(a);
+            TenantDatePair tdPair = TenantDatePair.of(tenant, date);
+            PartitionedTenantStore store = date2Store.get(tdPair);
+            if (store == null) {
+                return 0;
+            }
+
+            return store.countKeys(from, to, secondaryKey);
+        } else {
+            int result = 0;
+            long n = from;
+            LocalDate i = a;
+            while (!i.equals(b)) {
+                long endOfDay = endOfDay(i);
+                result += countKeys(n, endOfDay, tenant, secondaryKey);
+                n = endOfDay + 1;
+                i = i.plusDays(1);
+            }
+
+            return result;
+        }
+    }
+
     private static String asDate(LocalDate a) {
         String mon = a.getMonth().name().substring(0, 3);
         return a.getYear() + "-" + mon + "-" + a.getDayOfMonth();

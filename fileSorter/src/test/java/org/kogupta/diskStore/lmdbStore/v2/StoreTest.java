@@ -2,8 +2,8 @@ package org.kogupta.diskStore.lmdbStore.v2;
 
 import com.google.common.io.MoreFiles;
 import org.kogupta.diskStore.Pojo2;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class StoreTest {
 
     private Store store;
 
-    @BeforeTest
+    @BeforeMethod
     public void createStore() throws IOException {
         Path _path = Files.createDirectories(path);
         assertNotNull(_path);
@@ -38,7 +38,7 @@ public class StoreTest {
         store = new Store(path);
     }
 
-    @AfterTest
+    @AfterMethod
     public void close() throws IOException {
         store.closeAll();
         MoreFiles.deleteRecursively(path);

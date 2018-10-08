@@ -169,7 +169,7 @@ public final class PartitionedTenantStore {
 
             String s = String.format(
                     "%s, hour: %d, %s is null and %s is not - either both should be null or both non-null!",
-                    hour, a, b);
+                    info, hour, a, b);
             throw new IllegalStateException(s);
         }
 
@@ -220,7 +220,6 @@ public final class PartitionedTenantStore {
             String hour = i < 10 ? "0" + i : Integer.toString(i);
             Dbi<ByteBuffer> data = env.openDbi(hour, MDB_CREATE);
             dataDbis[i] = data;
-//            Dbi<ByteBuffer> index = env.openDbi(hour, MDB_CREATE, MDB_INTEGERKEY, MDB_DUPSORT, MDB_DUPFIXED);
             Dbi<ByteBuffer> index = env.openDbi(hour, MDB_CREATE, MDB_DUPSORT, MDB_DUPFIXED);
             indices[i] = index;
         }

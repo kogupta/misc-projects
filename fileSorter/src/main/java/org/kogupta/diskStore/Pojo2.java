@@ -42,6 +42,13 @@ public final class Pojo2 {
         return buffer;
     }
 
+    @Override
+    public String toString() {
+        return String.format(
+                "uuid='%s', tenant='%s', secondaryKey='%s', timestamp=%d, time='%s'",
+                uuid, tenant, secondaryKey, timestamp, time);
+    }
+
     public static Pojo2 readFromBB(ByteBuffer buffer) {
         Pojo2 result = new Pojo2();
         result.setUuid(getString(buffer));

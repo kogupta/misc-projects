@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.groupingBy;
 
 public final class Store {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static final long oneMilli = MILLISECONDS.toNanos(1);
 
     private final Path dir;
     private final Map<TenantDatePair, PartitionedTenantStore> date2Store;
@@ -26,6 +27,8 @@ public final class Store {
     }
 
     public void bulkAdd(List<Pojo2> xs) {
+        if (xs == null || xs.isEmpty()) return;
+
         Map<TenantDatePair, List<Pojo2>> map = xs.stream().collect(groupingBy(TenantDatePair::from));
 
         for (Map.Entry<TenantDatePair, List<Pojo2>> kv : map.entrySet()) {
@@ -38,7 +41,6 @@ public final class Store {
             pStore.bulkAdd(pojos);
         }
     }
-
 
     // tenant aware addition
     public void bulkAdd(String tenant, String date, List<Pojo2> xs) {
@@ -114,13 +116,29 @@ public final class Store {
         }
     }
 
+    public void closeAll() {
+        logger.atInfo().log("closing db for all tenants and dates");
+        date2Store.forEach((key, tenantStore) -> tenantStore.close());
+    }
+
+    public void dropData(String tenant, LocalDate date, int hour) {
+        assert hour >= 0 && hour < 24;
+        String _date = asDate(date);
+        TenantDatePair key = TenantDatePair.of(tenant, _date);
+        PartitionedTenantStore store = date2Store.get(key);
+        if (store == null) {
+            logger.atSevere().log("No partitioned store for tenant: %s, date: %s",
+                                  tenant, _date);
+            return;
+        }
+
+        store.dropDb(hour);
+
+    }
+
     private static String asDate(LocalDate a) {
         String mon = a.getMonth().name().substring(0, 3);
         return a.getYear() + "-" + mon + "-" + a.getDayOfMonth();
-    }
-
-    public void dropDb(int hour) {
-
     }
 
     static LocalDate toLocalDate(long millis) {
@@ -131,7 +149,6 @@ public final class Store {
         return date.atStartOfDay().toInstant(UTC).toEpochMilli();
     }
 
-    private static final long oneMilli = MILLISECONDS.toNanos(1);
 
     static long endOfDay(LocalDate date) {
         LocalDateTime time = date.plusDays(1).atStartOfDay().minusNanos(oneMilli);

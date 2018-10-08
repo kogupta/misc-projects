@@ -36,6 +36,7 @@ public final class PartitionedTenantStore {
     private final ByteBuffer uuid;
     private final ByteBuffer value;
     private final ByteBuffer indexKey;
+    private final String info;
 
     PartitionedTenantStore(Path parentDir, String tenant, String date) {
         this.dataDbis = new Dbi[24];
@@ -45,6 +46,7 @@ public final class PartitionedTenantStore {
         uuid = allocateDirect(64);
         value = allocateDirect(4 * 1024);
         indexKey = allocateDirect(64);
+        info = String.format("tenant: %s, date: %s", tenant, date);
     }
 
     void bulkAdd(List<Pojo2> xs) {
@@ -149,15 +151,24 @@ public final class PartitionedTenantStore {
 
         if (dataDbis[hour] == null && indices[hour] == null) {
             // nothing to do here - already deleted
-            logger.atInfo().log("Databases already dropped for hour: %d", hour);
+            logger.atInfo().log("Databases already dropped for %s, hour: %d",
+                                info, hour);
             return;
         }
 
         if (dataDbis[hour] == null || indices[hour] == null) {
-            String db = dataDbis[hour] == null ? "data dbi is null" : "index db is null";
+            String a, b;
+            if (dataDbis[hour] == null) {
+                a = "data dbi";
+                b = "index db";
+            } else {
+                a = "index db";
+                b = "data dbi";
+            }
+
             String s = String.format(
-                    "For hour: %d, %s and other is not - either both should be null or both non-null!",
-                    hour, db);
+                    "%s, hour: %d, %s is null and %s is not - either both should be null or both non-null!",
+                    hour, a, b);
             throw new IllegalStateException(s);
         }
 
@@ -172,8 +183,12 @@ public final class PartitionedTenantStore {
             txn.commit();
         }
 
+        logger.atInfo().log("Dropped database for %s, hour: %d", info, hour);
+    }
 
-        logger.atInfo().log("Dropped database for hour: %d", hour);
+    public void close() {
+        logger.atInfo().log("Closing env for %s", info);
+        env.close();
     }
 
     private static void assertBB(ByteBuffer bb) {

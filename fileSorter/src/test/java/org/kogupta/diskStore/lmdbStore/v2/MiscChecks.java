@@ -8,7 +8,7 @@ import java.time.Month;
 import java.time.ZoneOffset;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static org.kogupta.diskStore.lmdbStore.v2.Store.toLocalDate;
+import static org.kogupta.diskStore.lmdbStore.v2.TimeFunctions.toLocalDate;
 import static org.testng.Assert.*;
 
 @Test
@@ -49,9 +49,9 @@ public class MiscChecks {
         int n = 0;
         for (LocalDate i = start; !i.equals(end); i = i.plusDays(1)) {
             n++;
-            long endOfDay = Store.endOfDay(i);
-            assertTrue(sameDay(Store.toEpochMillis(i), endOfDay));
-            assertFalse(sameDay(Store.toEpochMillis(i), endOfDay + 1));
+            long endOfDay = TimeFunctions.endOfDay(i);
+            assertTrue(sameDay(TimeFunctions.toEpochMillis(i), endOfDay));
+            assertFalse(sameDay(TimeFunctions.toEpochMillis(i), endOfDay + 1));
         }
 
         assertEquals(n, 1);

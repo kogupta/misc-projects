@@ -76,7 +76,7 @@ public class StoreTest {
                 .forEach(System.out::println);
 
         long numDays = xs.stream().mapToLong(Pojo2::getTimestamp)
-                .mapToObj(Store::toLocalDate)
+                .mapToObj(TimeFunctions::toLocalDate)
                 .distinct()
                 .count();
         assertEquals(numDays, 1);
@@ -132,7 +132,7 @@ public class StoreTest {
                 .forEach(System.out::println);
 
         long numDays = xs.stream().mapToLong(Pojo2::getTimestamp)
-                .mapToObj(Store::toLocalDate)
+                .mapToObj(TimeFunctions::toLocalDate)
                 .distinct()
                 .count();
         assertEquals(numDays, secKeys.length);
@@ -189,7 +189,7 @@ public class StoreTest {
                 .forEach(System.out::println);
 
         long numDays = xs.stream().mapToLong(Pojo2::getTimestamp)
-                .mapToObj(Store::toLocalDate)
+                .mapToObj(TimeFunctions::toLocalDate)
                 .distinct()
                 .count();
         assertEquals(numDays, days);

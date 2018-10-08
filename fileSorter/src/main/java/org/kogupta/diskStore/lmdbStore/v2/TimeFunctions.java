@@ -10,7 +10,9 @@ import static java.time.ZoneOffset.UTC;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-class TimeFunctions {
+enum TimeFunctions {
+    ;
+
     private static final long oneMilli = MILLISECONDS.toNanos(1);
 
     public static String asDate(LocalDate a) {

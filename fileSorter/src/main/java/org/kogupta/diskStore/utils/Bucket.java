@@ -17,7 +17,9 @@ public final class Bucket {
         OffsetDateTime time = Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC);
         int year = time.getYear();
         String month = months[time.getMonth().ordinal()];
-        this.date = year + "-" + month + "-" + time.getDayOfMonth();
+        int n = time.getDayOfMonth();
+        String _day = n < 10 ? "0" + n : Integer.toString(n);
+        this.date = year + "-" + month + "-" + _day;
         this.hour = time.getHour();
     }
 

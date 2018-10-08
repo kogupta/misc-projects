@@ -80,6 +80,7 @@ public final class PartitionedTenantStore {
     }
 
     int countKeys(long from, long to, String secondaryKey) {
+        logger.atInfo().log("Count query for: %s", info);
         AtomicInteger n = new AtomicInteger();
         Consumer3<Txn<ByteBuffer>, ByteBuffer, Dbi<ByteBuffer>> consumer =
                 (txn, bb, dbi) -> n.incrementAndGet();

@@ -2,7 +2,6 @@ package org.kogupta.diskStore.lmdbStore.v2;
 
 import com.google.common.io.MoreFiles;
 import org.kogupta.diskStore.Pojo2;
-import org.kogupta.diskStore.utils.Functions;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -16,14 +15,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static java.time.Month.JANUARY;
 import static java.time.ZoneOffset.UTC;
 import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static org.kogupta.diskStore.utils.Functions.tenants;
 import static org.testng.Assert.*;
 
 public class StoreTest {
@@ -49,33 +49,31 @@ public class StoreTest {
     }
 
     @Test
-    public void bulkAddTest() throws IOException {
-        int tenantCount = 3;
-        String[] tenants = Functions.tenants(tenantCount);
-        String[] secKeys = {"secKey1", "secKey2", "secKey3"};
+    public void addAndCount() throws IOException {
+        String[] tenants = tenants(3);
+        String[] secKeys = secondaryKeys(3);
 
         List<Pojo2> xs = new ArrayList<>();
 
         LocalDateTime time = LocalDate.of(2018, JANUARY, 1).atStartOfDay();
         Instant utcInstant = time.toInstant(UTC);
-        Random r = new Random();
-        int oneDay = (int) DAYS.toSeconds(1);
+        int oneHour = (int) HOURS.toSeconds(1);
         for (String tenant : tenants) {
             for (String secKey : secKeys) {
                 Pojo2 pojo2 = new Pojo2();
                 pojo2.setUuid(UUID.randomUUID().toString());
                 pojo2.setTenant(tenant);
                 pojo2.setSecondaryKey(secKey);
-                Instant n = utcInstant.plusSeconds(r.nextInt(oneDay));
+                Instant n = utcInstant.plusSeconds(oneHour);
                 pojo2.setTimestamp(n.toEpochMilli());
                 pojo2.setTime(n.toString());
                 xs.add(pojo2);
             }
         }
 
-        System.out.println(xs.stream()
-                                   .map(Pojo2::toString)
-                                   .collect(Collectors.joining("\n")));
+        xs.stream()
+                .map(Pojo2::toString)
+                .forEach(System.out::println);
 
         long numDays = xs.stream().mapToLong(Pojo2::getTimestamp)
                 .mapToObj(Store::toLocalDate)
@@ -87,19 +85,28 @@ public class StoreTest {
         store.bulkAdd(xs);
 
         // separate dirs for each tenant
-        assertEquals(Files.list(path).count(), tenantCount);
+        assertEquals(Files.list(path).count(), tenants.length);
 
         for (String tenant : tenants) {
             // separate dir for each day
             assertEquals(Files.list(path.resolve(tenant)).count(), numDays);
         }
+
+        long from = utcInstant.toEpochMilli();
+        long to = from + DAYS.toMillis(1);
+        for (String tenant : tenants) {
+            for (String secKey : secKeys) {
+                int n = store.countKeys(from, to, tenant, secKey);
+                assertEquals(n, 1);
+            }
+        }
+
     }
 
     @Test
-    public void bulkAddTest2() throws IOException {
-        int tenantCount = 1;
-        String[] tenants = Functions.tenants(tenantCount);
-        String[] secKeys = {"secKey1", "secKey2", "secKey3"};
+    public void addAndCount2() throws IOException {
+        String[] tenants = tenants(1);
+        String[] secKeys = secondaryKeys(3);
 
         List<Pojo2> xs = new ArrayList<>();
 
@@ -119,6 +126,7 @@ public class StoreTest {
             }
         }
 
+        // all items added
         xs.stream()
                 .map(Pojo2::toString)
                 .forEach(System.out::println);
@@ -129,17 +137,87 @@ public class StoreTest {
                 .count();
         assertEquals(numDays, secKeys.length);
 
+        // assert the dir is empty before test
         assertEquals(Files.list(path).count(), 0);
         store.bulkAdd(xs);
 
         // separate dirs for each tenant
-        assertEquals(Files.list(path).count(), tenantCount);
+        assertEquals(Files.list(path).count(), tenants.length);
 
         for (String tenant : tenants) {
             // separate dir for each day
             assertEquals(Files.list(path.resolve(tenant)).count(), numDays);
         }
+
+        long from = utcInstant.toEpochMilli();
+        for (String tenant : tenants) {
+            for (int i = 0; i < secKeys.length; i++) {
+                String secKey = secKeys[i];
+                long to = from + DAYS.toMillis(i + 1);
+                int n = store.countKeys(from, to, tenant, secKey);
+                assertEquals(n, 1);
+            }
+        }
+
     }
 
+    @Test
+    public void addAndCount3() throws IOException {
+        String[] tenants = tenants(1);
+        String[] secKeys = secondaryKeys(1);
 
+        List<Pojo2> xs = new ArrayList<>();
+
+        LocalDateTime time = LocalDate.of(2018, JANUARY, 1).atStartOfDay();
+        Instant utcInstant = time.toInstant(UTC);
+
+        final int days = 2, hours = 48;
+        for (int i = 0; i < hours; i++) {
+            Pojo2 pojo2 = new Pojo2();
+            pojo2.setUuid(UUID.randomUUID().toString());
+            pojo2.setTenant(tenants[0]);
+            pojo2.setSecondaryKey(secKeys[0]);
+            Instant n = utcInstant.plus(i, ChronoUnit.HOURS);
+            pojo2.setTimestamp(n.toEpochMilli());
+            pojo2.setTime(n.toString());
+            xs.add(pojo2);
+        }
+
+        // all items added
+        xs.stream()
+                .map(Pojo2::toString)
+                .forEach(System.out::println);
+
+        long numDays = xs.stream().mapToLong(Pojo2::getTimestamp)
+                .mapToObj(Store::toLocalDate)
+                .distinct()
+                .count();
+        assertEquals(numDays, days);
+
+        // assert the dir is empty before test
+        assertEquals(Files.list(path).count(), 0);
+        store.bulkAdd(xs);
+
+        // separate dirs for each tenant
+        assertEquals(Files.list(path).count(), tenants.length);
+
+        for (String tenant : tenants) {
+            // separate dir for each day
+            assertEquals(Files.list(path.resolve(tenant)).count(), numDays);
+        }
+
+        long from = utcInstant.toEpochMilli();
+        for (int i = 1; i <= hours; i++) {
+            long to = from + HOURS.toMillis(i);
+            int n = store.countKeys(from, to, tenants[0], secKeys[0]);
+            assertEquals(n, i);
+        }
+    }
+
+    private static String[] secondaryKeys(int n) {
+        assert n > 0 && n < 100;
+        String[] xs = new String[n];
+        Arrays.setAll(xs, i -> i < 10 ? "secKey_0" + i : "secKey_" + i);
+        return xs;
+    }
 }

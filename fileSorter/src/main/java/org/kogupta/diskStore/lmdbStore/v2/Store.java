@@ -133,12 +133,13 @@ public final class Store {
         }
 
         store.dropDb(hour);
-
     }
 
     private static String asDate(LocalDate a) {
         String mon = a.getMonth().name().substring(0, 3);
-        return a.getYear() + "-" + mon + "-" + a.getDayOfMonth();
+        int n = a.getDayOfMonth();
+        String _day = n < 10 ? "0" + n : Integer.toString(n);
+        return a.getYear() + "-" + mon + "-" + _day;
     }
 
     static LocalDate toLocalDate(long millis) {

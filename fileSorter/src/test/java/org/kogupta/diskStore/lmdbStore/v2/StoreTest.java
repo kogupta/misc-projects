@@ -14,10 +14,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static java.time.Month.JANUARY;
 import static java.time.ZoneOffset.UTC;
@@ -98,6 +95,12 @@ public class StoreTest {
             for (String secKey : secKeys) {
                 int n = store.countKeys(from, to, tenant, secKey);
                 assertEquals(n, 1);
+
+                List<Pojo2> read = store.read(from, to, tenant, secKey);
+                assertNotNull(read);
+                assertEquals(read.size(), 1);
+                assertEquals(read.get(0).getTenant(), tenant);
+                assertEquals(read.get(0).getSecondaryKey(), secKey);
             }
         }
 
@@ -156,6 +159,12 @@ public class StoreTest {
                 long to = from + DAYS.toMillis(i + 1);
                 int n = store.countKeys(from, to, tenant, secKey);
                 assertEquals(n, 1);
+
+                List<Pojo2> read = store.read(from, to, tenant, secKey);
+                assertNotNull(read);
+                assertEquals(read.size(), 1);
+                assertEquals(read.get(0).getTenant(), tenant);
+                assertEquals(read.get(0).getSecondaryKey(), secKey);
             }
         }
 
@@ -172,16 +181,20 @@ public class StoreTest {
         Instant utcInstant = time.toInstant(UTC);
 
         final int days = 2, hours = 48;
+        final String tenant = tenants[0], secKey = secKeys[0];
+
         for (int i = 0; i < hours; i++) {
             Pojo2 pojo2 = new Pojo2();
             pojo2.setUuid(UUID.randomUUID().toString());
-            pojo2.setTenant(tenants[0]);
-            pojo2.setSecondaryKey(secKeys[0]);
+            pojo2.setTenant(tenant);
+            pojo2.setSecondaryKey(secKey);
             Instant n = utcInstant.plus(i, ChronoUnit.HOURS);
             pojo2.setTimestamp(n.toEpochMilli());
             pojo2.setTime(n.toString());
             xs.add(pojo2);
         }
+
+        Collections.shuffle(xs);
 
         // all items added
         xs.stream()
@@ -201,17 +214,33 @@ public class StoreTest {
         // separate dirs for each tenant
         assertEquals(Files.list(path).count(), tenants.length);
 
-        for (String tenant : tenants) {
+        for (String _tenant : tenants) {
             // separate dir for each day
-            assertEquals(Files.list(path.resolve(tenant)).count(), numDays);
+            assertEquals(Files.list(path.resolve(_tenant)).count(), numDays);
         }
 
         long from = utcInstant.toEpochMilli();
         for (int i = 1; i <= hours; i++) {
             long to = from + HOURS.toMillis(i);
-            int n = store.countKeys(from, to, tenants[0], secKeys[0]);
+            int n = store.countKeys(from, to, tenant, secKey);
             assertEquals(n, i);
+
+            List<Pojo2> read = store.read(from, to, tenant, secKey);
+            assertNotNull(read);
+            assertEquals(read.size(), i);
+            assertTrue(read.stream().map(Pojo2::getTenant).allMatch(tenant::equals));
+            assertTrue(read.stream().map(Pojo2::getSecondaryKey).allMatch(secKey::equals));
+            isSorted(read);
         }
+    }
+
+    private static void isSorted(List<Pojo2> xs) {
+        for (int i = 0; i < xs.size() - 1; i++) {
+            Pojo2 a = xs.get(i);
+            Pojo2 b = xs.get(i + 1);
+            assertTrue(a.getTimestamp() <= b.getTimestamp());
+        }
+
     }
 
     private static String[] secondaryKeys(int n) {

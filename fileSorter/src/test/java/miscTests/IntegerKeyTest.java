@@ -17,6 +17,7 @@ import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Random;
 
 import static java.nio.ByteBuffer.allocateDirect;
@@ -30,9 +31,17 @@ import static org.lmdbjava.KeyRange.closed;
 
 @RunWith(Parameterized.class)
 public final class IntegerKeyTest {
-  private static final boolean disableIteratorTest = false;
-
   private static final int keyCount = 10;
+
+  private static Comparator<ByteBuffer> makeComparator(ByteOrder byteOrder) {
+    return (o1, o2) -> {
+      long a = o1.order(byteOrder).getLong();
+      o1.flip();
+      long b = o2.order(byteOrder).getLong();
+      o2.flip();
+      return Long.compare(a, b);
+    };
+  }
 
   @Rule
   public final TemporaryFolder tmp = new TemporaryFolder();
@@ -136,11 +145,10 @@ public final class IntegerKeyTest {
   }
 
   private void iteratorRangeTest(KeyRange<ByteBuffer> range, int expected) {
-    if (disableIteratorTest) return;
-
     int count = 0;
+    Comparator<ByteBuffer> cmp = makeComparator(keyByteOrder);
     try (Txn<ByteBuffer> txn = env.txnRead();
-         CursorIterator<ByteBuffer> itr = db.iterate(txn, range)) {
+         CursorIterator<ByteBuffer> itr = db.iterate(txn, range, cmp)) {
       for (CursorIterator.KeyVal<ByteBuffer> kv : itr.iterable()) {
         count++;
       }

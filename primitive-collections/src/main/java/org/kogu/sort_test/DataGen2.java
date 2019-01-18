@@ -16,6 +16,12 @@ public final class DataGen2 {
   private static final Random random = new Random();
   private static final int recordWidth = 44;
   private static final String2Bytes extractor = new String2Bytes(36, US_ASCII);
+  private static final ObjectExtractor<ImmutableRow> rowExtractor = (buffer, index, recordWidth) -> {
+    String s = extractor.readString(buffer);
+    long n = buffer.getLong();
+    return ImmutableRow.of(s, n);
+  };
+
   private static final long zero = initZero();
 
   private static ImmutableRow expectedMin, expectedMax;

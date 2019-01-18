@@ -22,10 +22,6 @@ public final class BBSort {
     }
   }
 
-  private static <T> void sort(ByteBuffer buffer) {
-
-  }
-
   @SuppressWarnings("unchecked")
   private static <K> void selectionSort(ByteBuffer a, int from, int to) {
     for (int i = from; i < to - 1; i += recordWidth) {

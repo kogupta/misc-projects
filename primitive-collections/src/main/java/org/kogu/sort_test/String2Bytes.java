@@ -4,31 +4,31 @@ import com.google.common.base.Preconditions;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CoderResult;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.*;
 import java.util.UUID;
 
 public final class String2Bytes {
   private final byte[] bytes;
   private final ByteBuffer out;
-  private final CharsetEncoder ENCODER;
+  private final CharsetEncoder encoder;
+  private final CharsetDecoder decoder;
   private final CharBuffer charBuffer;
 
-  public String2Bytes(int stringSize) {
+  public String2Bytes(int stringSize, Charset charset) {
     Preconditions.checkArgument(stringSize > 0);
 
     bytes = new byte[stringSize];
     out = ByteBuffer.wrap(bytes);
-    ENCODER = StandardCharsets.US_ASCII.newEncoder();
     charBuffer = CharBuffer.allocate(stringSize);
+    encoder = charset.newEncoder();
+    decoder = charset.newDecoder();
   }
 
   public byte[] extractBytes(String s) {
     charBuffer.put(s);
     charBuffer.flip();
-    CoderResult result = ENCODER.encode(charBuffer, out, true);
-    System.out.println("---- " + result + " ----");
+    CoderResult result = encoder.encode(charBuffer, out, true);
+//    System.out.println("---- " + result + " ----");
 
     byte[] array = out.array();
 
@@ -38,8 +38,16 @@ public final class String2Bytes {
     return array;
   }
 
+  public String readString(ByteBuffer buffer) {
+    decoder.decode(buffer, charBuffer, true);
+    char[] chars = charBuffer.array();
+    charBuffer.flip();
+    return new String(chars);
+  }
+
   public static void main(String[] args) {
-    String2Bytes extractor = new String2Bytes(3);
+    Charset charset = StandardCharsets.US_ASCII;
+    String2Bytes extractor = new String2Bytes(3, charset);
 
     String[] xs = {"aaa", "bbb", "ccc", "ddd"};
 
@@ -49,10 +57,14 @@ public final class String2Bytes {
 
       System.out.printf("Are the arrays same? %s%n", extractor.bytes == array);
 
-      String x = new String(array, StandardCharsets.US_ASCII);
+      String x = new String(array, charset);
       System.out.printf("Are the strings equal? %s%n", s.equals(x));
       System.out.println("Obtained: " + x);
       System.out.println("Expected: " + s);
+
+      System.out.print("Buffer to string: ");
+      ByteBuffer buffer = ByteBuffer.wrap(array);
+      System.out.println("obtained: " + extractor.readString(buffer));
       System.out.println();
     }
 

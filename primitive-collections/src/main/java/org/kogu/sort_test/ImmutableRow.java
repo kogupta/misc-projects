@@ -38,4 +38,9 @@ public final class ImmutableRow implements Comparable<ImmutableRow> {
     result = 31 * result + (int) (value ^ (value >>> 32));
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "Row[" + key + " -> " + value + "]";
+  }
 }

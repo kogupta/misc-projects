@@ -5,12 +5,16 @@ import java.nio.ByteBuffer;
 public final class ByteBufferSort {
   private static final int QUICKSORT_NO_REC = 16;
   private static final int QUICKSORT_MEDIAN_OF_9 = 128;
-  private static final int stringLength = 36;
-  private static final int recordLength = stringLength + Long.BYTES;
-  private static final byte[] bytes = new byte[recordLength];
 
-  @SuppressWarnings("unchecked")
-  public static <K> void quickSort(final K[] x, final int from, final int to) {
+  private final ByteBuffer data;
+  private final int[] index;
+
+  public ByteBufferSort(ByteBuffer data, int[] index) {
+    this.data = data;
+    this.index = index;
+  }
+
+  public static void quickSort(final int[] x, final int from, final int to) {
     final int len = to - from;
     // Selection sort on smallest arrays
     if (len < QUICKSORT_NO_REC) {
@@ -28,17 +32,17 @@ public final class ByteBufferSort {
       n = med3(x, n - 2 * s, n - s, n);
     }
     m = med3(x, l, m, n); // Mid-size, med of 3
-    final K v = x[m];
+    final int v = x[m];
     // Establish Invariant: v* (<v)* (>v)* v*
     int a = from, b = a, c = to - 1, d = c;
     while (true) {
       int comparison;
-      while (b <= c && (comparison = (((Comparable<K>) (x[b])).compareTo(v))) <= 0) {
+      while (b <= c && (comparison = (Integer.compare((x[b]), (v)))) <= 0) {
         if (comparison == 0)
           swap(x, a++, b);
         b++;
       }
-      while (c >= b && (comparison = (((Comparable<K>) (x[c])).compareTo(v))) >= 0) {
+      while (c >= b && (comparison = (Integer.compare((x[c]), (v)))) >= 0) {
         if (comparison == 0)
           swap(x, c, d--);
         c--;
@@ -60,43 +64,44 @@ public final class ByteBufferSort {
       quickSort(x, to - s, to);
   }
 
-  @SuppressWarnings("unchecked")
-  private static <K> void selectionSort(final K[] a, final int from, final int to) {
+  private static void selectionSort(final int[] a, final int from, final int to) {
     for (int i = from; i < to - 1; i++) {
       int m = i;
       for (int j = i + 1; j < to; j++)
-        if ((((Comparable<K>) (a[j])).compareTo(a[m]) < 0))
+        if (((a[j]) < (a[m])))
           m = j;
       if (m != i) {
-        final K u = a[i];
+        final int u = a[i];
         a[i] = a[m];
         a[m] = u;
       }
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private static <K> int med3(final K x[], final int a, final int b, final int c) {
-    final int ab = (((Comparable<K>) (x[a])).compareTo(x[b]));
-    final int ac = (((Comparable<K>) (x[a])).compareTo(x[c]));
-    final int bc = (((Comparable<K>) (x[b])).compareTo(x[c]));
+  private static int med3(final int x[], final int a, final int b, final int c) {
+    final int ab = (Integer.compare((x[a]), (x[b])));
+    final int ac = (Integer.compare((x[a]), (x[c])));
+    final int bc = (Integer.compare((x[b]), (x[c])));
     return (ab < 0 ? (bc < 0 ? b : ac < 0 ? c : a) : (bc > 0 ? b : ac > 0 ? c : a));
   }
 
-  private static <K> void swap(final K x[], final int a, final int b) {
-    final K t = x[a];
+  private static void swap(final int x[], final int a, final int b) {
+    final int t = x[a];
     x[a] = x[b];
     x[b] = t;
   }
 
-  private static <K> void swap(final K[] x, int a, int b, final int n) {
+  /**
+   * Swaps two sequences of elements of an array.
+   *
+   * @param x an array.
+   * @param a a position in {@code x}.
+   * @param b another position in {@code x}.
+   * @param n the number of elements to exchange starting at {@code a} and
+   *          {@code b}.
+   */
+  private static void swap(final int[] x, int a, int b, final int n) {
     for (int i = 0; i < n; i++, a++, b++)
       swap(x, a, b);
-  }
-
-  private static int compareSection(ByteBuffer bb, int fromA, int fromB) {
-    long a = bb.getLong(fromA + stringLength);
-    long b = bb.getLong(fromB + stringLength);
-    return Long.compare(a, b);
   }
 }

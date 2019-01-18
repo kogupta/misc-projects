@@ -16,4 +16,9 @@ public final class MutableRow implements Comparable<MutableRow> {
   public int compareTo(MutableRow o) {
     return Long.compare(value, o.value);
   }
+
+  @Override
+  public String toString() {
+    return "Row[" + key + " -> " + value + "]";
+  }
 }

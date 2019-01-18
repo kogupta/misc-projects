@@ -9,6 +9,8 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static org.kogu.sort_test.Functions.time;
+
 public final class DataGen {
   private static final Random random = new Random();
 
@@ -42,8 +44,8 @@ public final class DataGen {
 
   private static void sort(ImmutableRow[] rows, String message, Runnable r) {
     for (int i = 0; i < 10; i++) {
-//      time("Shuffled: ", () -> ObjectArrays.shuffle(rows, new Random()));
-      ObjectArrays.shuffle(rows, random);
+      time("Shuffled: ", () -> ObjectArrays.shuffle(rows, random));
+//      ObjectArrays.shuffle(rows, random);
       time(message, r);
 
       assert rows[0].equals(expectedMin);
@@ -53,10 +55,4 @@ public final class DataGen {
     }
   }
 
-  private static void time(String s, Runnable r) {
-    long t0 = System.nanoTime();
-    r.run();
-    long timeTaken = System.nanoTime() - t0;
-    System.out.printf("%s: %,d millis%n", s, TimeUnit.NANOSECONDS.toMillis(timeTaken));
-  }
 }

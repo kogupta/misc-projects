@@ -131,34 +131,56 @@ public final class ByteBufferSort<T> {
   }
 
   public static void main(String[] args) {
-    int[] index = new int[10];
-    Arrays.setAll(index, i -> i);
-    IntArrays.shuffle(index, new Random());
+    int[] index = createIndex();
+    ByteBuffer buffer = createData(index);
 
-    ByteBuffer buffer = ByteBuffer.allocate(10 * 4);
-    for (int i : index) {
-      buffer.putInt(i);
-    }
-
-    System.out.println("Index: " + Arrays.toString(index));
-    Functions.iterate(buffer.duplicate(), 4, bb -> System.out.print(bb.getInt() + " "));
-
-    buffer.flip();
-
-    printState(buffer);
-    ByteBufferSort<Integer> sorter = new ByteBufferSort<>(buffer, index, intExtractor, intComparator, 4);
+    int recordWidth = Integer.BYTES;
+    ByteBufferSort<Integer> sorter = new ByteBufferSort<>(buffer, index, intExtractor, intComparator, recordWidth);
     sorter.quickSort(0, index.length);
 
     System.out.println();
 
     System.out.println("Post sorting: ");
     System.out.println("Index: " + Arrays.toString(index));
-    for (int i : index) {
-      int n = intExtractor.intAtIndex(buffer, i);
-//      int n = buffer.getInt(i);
-      System.out.println(n);
+    int[] obtained = new int[index.length];
+    for (int idx = 0; idx < index.length; idx++) {
+      int i = index[idx];
+      obtained[idx] = intExtractor.intAtIndex(buffer, i);
     }
 
+    IntArrays.quickSort(index);
+    if (!Arrays.equals(index, obtained)) {
+      System.err.println("Sorting failed!");
+      System.err.println("Expected: " + Arrays.toString(index));
+      System.err.println("Obtained: " + Arrays.toString(obtained));
 
+      throw new AssertionError("Sorting failed!");
+    }
+
+    System.out.println("Sorting works: obtained => " + Arrays.toString(obtained));
+  }
+
+  private static ByteBuffer createData(int[] index) {
+    ByteBuffer buffer = ByteBuffer.allocate(10 * 4);
+    for (int i : index) {
+      buffer.putInt(i);
+    }
+
+    buffer.flip();
+
+    // display
+    Functions.iterate(buffer.duplicate(), 4, bb -> System.out.print(bb.getInt() + " "));
+    System.out.println();
+    printState(buffer);
+
+    return buffer;
+  }
+
+  private static int[] createIndex() {
+    int[] index = new int[10];
+    Arrays.setAll(index, i -> i);
+    IntArrays.shuffle(index, new Random());
+    System.out.println("Index: " + Arrays.toString(index));
+    return index;
   }
 }

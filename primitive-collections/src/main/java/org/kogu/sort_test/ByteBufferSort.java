@@ -10,7 +10,7 @@ import static org.kogu.sort_test.BBFixedWidthComparator.intComparator;
 import static org.kogu.sort_test.Functions.printState;
 import static org.kogu.sort_test.ObjectExtractor.intExtractor;
 
-public final class ByteBufferSort<T> {
+public final class ByteBufferSort<T extends Comparable<T>> {
   private static final int QUICKSORT_NO_REC = 16;
   private static final int QUICKSORT_MEDIAN_OF_9 = 128;
 
@@ -45,22 +45,22 @@ public final class ByteBufferSort<T> {
     int n = to - 1;
     if (len > QUICKSORT_MEDIAN_OF_9) { // Big arrays, pseudomedian of 9
       int s = len / 8;
-      l = med3(index, l, l + s, l + 2 * s);
-      m = med3(index, m - s, m, m + s);
-      n = med3(index, n - 2 * s, n - s, n);
+      l = med3(l, l + s, l + 2 * s);
+      m = med3(m - s, m, m + s);
+      n = med3(n - 2 * s, n - s, n);
     }
-    m = med3(index, l, m, n); // Mid-size, med of 3
-    final int v = index[m];
+    m = med3(l, m, n); // Mid-size, med of 3
+//    final int v = index[m];
     // Establish Invariant: v* (<v)* (>v)* v*
     int a = from, b = a, c = to - 1, d = c;
     while (true) {
       int comparison;
-      while (b <= c && (comparison = (Integer.compare((index[b]), (v)))) <= 0) {
+      while (b <= c && (comparison = compareIndices(b, m)) <= 0) {
         if (comparison == 0)
           swap(index, a++, b);
         b++;
       }
-      while (c >= b && (comparison = (Integer.compare((index[c]), (v)))) >= 0) {
+      while (c >= b && (comparison = compareIndices(c, m)) >= 0) {
         if (comparison == 0)
           swap(index, c, d--);
         c--;
@@ -75,11 +75,24 @@ public final class ByteBufferSort<T> {
     swap(index, from, b - s, s);
     s = Math.min(d - c, to - d - 1);
     swap(index, b, to - s, s);
+
+    System.out.println("Partitioning done ...");
+    displayData(s);
+
     // Recursively sort non-partition-elements
     if ((s = b - a) > 1)
       quickSort(from, from + s);
     if ((s = d - c) > 1)
       quickSort(to - s, to);
+  }
+
+  private void displayData(int s) {
+    System.out.println("Partition at: " + s);
+    for (int idx : index) {
+      T t = extractor.objectAtIndex(data, idx, recordWidth);
+      System.out.print(t + "  ");
+    }
+    System.out.println();
   }
 
   private void selectionSort(final int from, final int to) {
@@ -103,10 +116,16 @@ public final class ByteBufferSort<T> {
     return comparator.compareFixedWidthObjects(data, objIndex, objIndex2, recordWidth);
   }
 
-  private static int med3(final int x[], final int a, final int b, final int c) {
-    final int ab = (Integer.compare((x[a]), (x[b])));
-    final int ac = (Integer.compare((x[a]), (x[c])));
-    final int bc = (Integer.compare((x[b]), (x[c])));
+  private int med3(final int a, final int b, final int c) {
+//    final int ab = (Integer.compare((x[a]), (x[b])));
+    final int ab = compareIndices(a, b);
+
+//    final int ac = (Integer.compare((x[a]), (x[c])));
+    final int ac = compareIndices(a, c);
+
+//    final int bc = (Integer.compare((x[b]), (x[c])));
+    final int bc = compareIndices(b, c);
+
     return (ab < 0 ? (bc < 0 ? b : ac < 0 ? c : a) : (bc > 0 ? b : ac > 0 ? c : a));
   }
 
@@ -131,12 +150,13 @@ public final class ByteBufferSort<T> {
   }
 
   public static void main(String[] args) {
-    int[] index = createIndex();
+    int[] index = createIndex(30);
     ByteBuffer buffer = createData(index);
 
     int recordWidth = Integer.BYTES;
     ByteBufferSort<Integer> sorter = new ByteBufferSort<>(buffer, index, intExtractor, intComparator, recordWidth);
     sorter.quickSort(0, index.length);
+//    sorter.selectionSort(0, index.length);
 
     System.out.println();
 
@@ -161,7 +181,8 @@ public final class ByteBufferSort<T> {
   }
 
   private static ByteBuffer createData(int[] index) {
-    ByteBuffer buffer = ByteBuffer.allocate(10 * 4);
+    final int width = Integer.BYTES;
+    ByteBuffer buffer = ByteBuffer.allocate(index.length * width);
     for (int i : index) {
       buffer.putInt(i);
     }
@@ -169,15 +190,15 @@ public final class ByteBufferSort<T> {
     buffer.flip();
 
     // display
-    Functions.iterate(buffer.duplicate(), 4, bb -> System.out.print(bb.getInt() + " "));
+    Functions.iterate(buffer.duplicate(), width, bb -> System.out.print(bb.getInt() + " "));
     System.out.println();
     printState(buffer);
 
     return buffer;
   }
 
-  private static int[] createIndex() {
-    int[] index = new int[10];
+  private static int[] createIndex(int numItems) {
+    int[] index = new int[numItems];
     Arrays.setAll(index, i -> i);
     IntArrays.shuffle(index, new Random());
     System.out.println("Index: " + Arrays.toString(index));

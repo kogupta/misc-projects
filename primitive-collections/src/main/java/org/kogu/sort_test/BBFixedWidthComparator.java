@@ -13,6 +13,7 @@ public interface BBFixedWidthComparator {
     int a = buffer.getInt(idx * width);
     int b = buffer.getInt(idx2 * width);
 //      Functions.printState(buffer);
+//    System.out.printf("Comparing %d[%d] vs %d[%d]%n", a, idx, b, idx2);
     return Integer.compare(a, b);
   };
 

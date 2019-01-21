@@ -1,6 +1,9 @@
 package org.kogu.sort_test;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static java.util.function.IntUnaryOperator.identity;
 
 public final class ByteBufferSort<T extends Comparable<T>> {
   private static final int QUICKSORT_NO_REC = 16;
@@ -8,20 +11,23 @@ public final class ByteBufferSort<T extends Comparable<T>> {
 
   private final ByteBuffer data;
   private final int[] index;
-  private final ObjectExtractor<T> extractor;
   private final BBFixedWidthComparator comparator;
   private final int recordWidth;
 
   public ByteBufferSort(ByteBuffer data,
-                        int[] index,
-                        ObjectExtractor<T> extractor,
                         BBFixedWidthComparator comparator,
                         int recordWidth) {
     this.data = data;
-    this.index = index;
-    this.extractor = extractor;
     this.comparator = comparator;
     this.recordWidth = recordWidth;
+    int numRecords = (data.limit() - data.position()) / recordWidth;
+    this.index = new int[numRecords];
+    Arrays.setAll(this.index, identity());
+  }
+
+  public int[] sort() {
+    quickSort(0, index.length);
+    return index;
   }
 
   public void quickSort(final int from, final int to) {
@@ -42,6 +48,7 @@ public final class ByteBufferSort<T extends Comparable<T>> {
       n = med3(n - 2 * s, n - s, n);
     }
     m = med3(l, m, n); // Mid-size, med of 3
+
 //    final int v = index[m];
     // Establish Invariant: v* (<v)* (>v)* v*
     int a = from, b = a, c = to - 1, d = c;
@@ -67,23 +74,11 @@ public final class ByteBufferSort<T extends Comparable<T>> {
     s = Math.min(d - c, to - d - 1);
     swap(index, b, to - s, s);
 
-    System.out.println("Partitioning done ...");
-    displayData(s);
-
     // Recursively sort non-partition-elements
     if ((s = b - a) > 1)
       quickSort(from, from + s);
     if ((s = d - c) > 1)
       quickSort(to - s, to);
-  }
-
-  private void displayData(int s) {
-    System.out.println("Partition at: " + s);
-    for (int idx : index) {
-      T t = extractor.objectAtIndex(data, idx, recordWidth);
-      System.out.print(t + "  ");
-    }
-    System.out.println();
   }
 
   private void selectionSort(final int from, final int to) {

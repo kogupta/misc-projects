@@ -9,6 +9,11 @@ import java.util.function.Consumer;
 
 import static org.kogu.sort_test.BBFixedWidthComparator.intComparator;
 
+/**
+ * copied from sedgewick's book!
+ *
+ * @param <T>
+ */
 public final class Quicksort<T extends Comparable<T>> {
   private static final int QUICKSORT_NO_REC = 16;
   private static final int QUICKSORT_MEDIAN_OF_9 = 128;

@@ -18,6 +18,13 @@ enum Functions {
     buffer.flip();
   }
 
+  public static void displayIntByteBuffer(ByteBuffer buffer) {
+    Consumer<ByteBuffer> c = bb -> System.out.print(bb.getInt() + " ");
+
+    iterate(buffer, Integer.BYTES, c);
+    System.out.println();
+  }
+
   public static void printState(ByteBuffer bb) {
     String s = String.format("direct: %s, position: %,d, limit: %,d, capacity: %,d",
                              bb.isDirect(), bb.position(), bb.limit(), bb.capacity());

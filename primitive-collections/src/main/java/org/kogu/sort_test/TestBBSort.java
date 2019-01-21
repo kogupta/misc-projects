@@ -6,67 +6,63 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
+import static java.util.function.IntUnaryOperator.identity;
 import static org.kogu.sort_test.BBFixedWidthComparator.intComparator;
-import static org.kogu.sort_test.Functions.printState;
-import static org.kogu.sort_test.ObjectExtractor.intExtractor;
+import static org.kogu.sort_test.Functions.displayIntByteBuffer;
 
 public final class TestBBSort {
-  private static final int numItems = 15;
+  private static final int recordWidth = Integer.BYTES;
 
   public static void main(String[] args) {
-    int[] index = createIndex(numItems);
-    ByteBuffer buffer = createData(index);
-    int recordWidth = Integer.BYTES;
+    int[] sizes = {10, 15, 20, 30, 50, 100, 1_000, 10_000};
 
-    ByteBufferSort<Integer> sorter = new ByteBufferSort<>(buffer, index, intExtractor, intComparator, recordWidth);
-    sorter.quickSort(0, index.length);
-//    sorter.selectionSort(0, index.length);
+    for (int numItems : sizes) {
+      System.out.println("items count: " + numItems);
 
-    System.out.println();
+      final int[] expected = orderedIntArray(numItems);
+      ByteBuffer buffer = createIntData(expected);
 
-    System.out.println("Post sorting: ");
-    System.out.println("Index: " + Arrays.toString(index));
-    int[] obtained = new int[index.length];
-    for (int idx = 0; idx < index.length; idx++) {
-      int i = index[idx];
-      obtained[idx] = intExtractor.intAtIndex(buffer, i);
+      ByteBufferSort<Integer> sorter = new ByteBufferSort<>(buffer, intComparator, recordWidth);
+      int[] sortedIndex = sorter.sort();
+
+      int[] obtained = new int[numItems];
+      for (int idx = 0; idx < sortedIndex.length; idx++) {
+        int i = sortedIndex[idx];
+        obtained[idx] = buffer.getInt(i * recordWidth);
+      }
+
+      if (!Arrays.equals(expected, obtained)) {
+        System.err.println("Sorting failed!");
+        System.err.println("Obtained: " + Arrays.toString(obtained));
+
+        throw new AssertionError("Sorting failed!");
+      }
+
+//      System.out.println("Sorting works: obtained => " + Arrays.toString(obtained));
+      System.out.println("Sorting works!");
     }
 
-    IntArrays.quickSort(index);
-    if (!Arrays.equals(index, obtained)) {
-      System.err.println("Sorting failed!");
-      System.err.println("Expected: " + Arrays.toString(index));
-      System.err.println("Obtained: " + Arrays.toString(obtained));
 
-      throw new AssertionError("Sorting failed!");
-    }
-
-//    System.out.println("Sorting works: obtained => " + Arrays.toString(obtained));
-    System.out.println("Sorting works!");
   }
 
-  private static ByteBuffer createData(int[] index) {
-    final int width = Integer.BYTES;
-    ByteBuffer buffer = ByteBuffer.allocate(index.length * width);
-    for (int i : index) {
-      buffer.putInt(i);
-    }
+  private static ByteBuffer createIntData(int[] expected) {
+    IntArrays.shuffle(expected, new Random());
+
+    ByteBuffer buffer = ByteBuffer.allocate(expected.length * Integer.BYTES);
+    for (int i : expected) buffer.putInt(i);
 
     buffer.flip();
+    displayIntByteBuffer(buffer.duplicate());
 
-    // display
-    Functions.iterate(buffer.duplicate(), width, bb -> System.out.print(bb.getInt() + " "));
-    System.out.println();
-    printState(buffer);
+    IntArrays.quickSort(expected);
 
     return buffer;
   }
 
-  private static int[] createIndex(int numItems) {
-    int[] index = new int[numItems];
-    Arrays.setAll(index, i -> i);
-    IntArrays.shuffle(index, new Random());
-    System.out.println("Index: " + Arrays.toString(index));
-    return index;
+  private static int[] orderedIntArray(int length) {
+    int[] ns = new int[length];
+    Arrays.setAll(ns, identity());
+    return ns;
   }
+
 }

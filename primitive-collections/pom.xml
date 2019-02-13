@@ -67,7 +67,7 @@
   </dependencies>
 
   <build>
-    <finalName>fileSorter</finalName>
+    <finalName>primitive-collections</finalName>
     <plugins>
       <!-- Set a compiler level -->
       <plugin>

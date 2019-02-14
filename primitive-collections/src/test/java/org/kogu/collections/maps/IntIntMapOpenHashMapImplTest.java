@@ -8,6 +8,7 @@ import java.util.Arrays;
 import static org.junit.Assert.*;
 import static org.kogu.collections.maps.Tools.shuffle;
 
+// TODO: parameterized tests
 public class IntIntMapOpenHashMapImplTest {
   private static final int defValue = -1;
 
@@ -16,6 +17,22 @@ public class IntIntMapOpenHashMapImplTest {
   @Before
   public void init() {
     map = new IntIntMapOpenHashMapImpl(12, 0.75f);
+  }
+
+  @Test
+  public void empty_map() {
+    assertTrue(map.isEmpty());
+    assertEquals(0, map.size());
+    for (int i = 0; i < 1_000; i++) {
+      assertEquals(defValue, map.getOrDefault(i, defValue));
+      assertEquals(defValue, map.getOrDefault(-i, defValue));
+    }
+
+    for (int i = 0; i < 1_000; i++) {
+      map.justRemove(i);
+      assertEquals(defValue, map.getOrDefault(i, defValue));
+      assertEquals(defValue, map.getOrDefault(-i, defValue));
+    }
   }
 
   @Test
@@ -34,6 +51,26 @@ public class IntIntMapOpenHashMapImplTest {
       for (int i = 0; i < item; i++) {
         int got = map.getOrDefault(i, defValue);
         assertEquals(i, got);
+      }
+    }
+  }
+
+  @Test
+  public void put_get_negative() {
+    int[] items = {10, 20, 50, 100, 1_000, 10_000};
+
+    for (int item : items) {
+      System.out.println("---- item: " + item + " ----");
+      for (int key = 0; key < item; key++) {
+        map.justPut(key, -key);
+      }
+
+      assertFalse(map.isEmpty());
+      assertEquals(item, map.size());
+
+      for (int i = 0; i < item; i++) {
+        int got = map.getOrDefault(i, defValue);
+        assertEquals(-i, got);
       }
     }
   }
@@ -66,18 +103,18 @@ public class IntIntMapOpenHashMapImplTest {
   }
 
   @Test
-  public void getOrDefault() {
-  }
+  public void remove() {
+    int[] items = {10, 20, 50, 100, 1_000, 10_000};
 
-  @Test
-  public void size() {
-  }
-
-  @Test
-  public void containsKey() {
-  }
-
-  @Test
-  public void containsValue() {
+    for (int item : items) {
+      System.out.println("---- item: " + item + " ----");
+      for (int key = 0; key < item; key++) {
+        map.justPut(key, key);
+        map.justRemove(key);
+        assertFalse(map.containsKey(key));
+        assertTrue(map.isEmpty());
+        assertEquals(defValue, map.getOrDefault(key, defValue));
+      }
+    }
   }
 }

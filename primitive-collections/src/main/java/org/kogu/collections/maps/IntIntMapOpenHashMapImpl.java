@@ -70,36 +70,45 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
   }
 
   private int putIndex(int key) {
-    int initial = Math.abs(Tools.phiMix(key) % used.length);
+    int initial = arrayIndex(key);
     int keyIdx = 2 * initial;
     if (!used[initial]) return keyIdx; // not used, virgin slot
     if (data[keyIdx] == key) return keyIdx; // re-insertion
 
     // check next index
     // till it is unused or wraps to initial index
-    int nextIdx = keyIdx + 2 == data.length ? 0 : keyIdx + 2;
+    int nextIdx = nextIndex(keyIdx);
 
     // avoid wrapping past starting hashed index [aka, keyIdx]
     // if slot == used, then check slot_key == query_key
     while (nextIdx != keyIdx && used[nextIdx / 2] && data[nextIdx] != key)
-      nextIdx = nextIdx + 2 == data.length ? 0 : nextIdx + 2;
+      nextIdx = nextIndex(nextIdx);
 
     return nextIdx != keyIdx ? nextIdx : -1;
   }
 
+  private int nextIndex(int keyIdx) {
+    return keyIdx + 2 == data.length ? 0 : keyIdx + 2;
+  }
+
+  private int arrayIndex(int key) {
+    int a = Tools.phiMix(key) % used.length;
+    return (a < 0) ? -a : a;
+  }
+
   private int readIndex(int key) {
-    int initial = Math.abs(Tools.phiMix(key) % used.length);
+    int initial = arrayIndex(key);
     int keyIdx = 2 * initial;
 
-    if (data[keyIdx] == key) return keyIdx;
+    if (used[initial] && data[keyIdx] == key) return keyIdx;
 
     // check next index
     // till it is == queried key; or, wraps to initial index
-    int nextIdx = keyIdx + 2 == data.length ? 0 : keyIdx + 2;
-    while (data[nextIdx] != key && nextIdx != keyIdx)
-      nextIdx = nextIdx + 2 == data.length ? 0 : nextIdx + 2;
+    int nextIdx = nextIndex(keyIdx);
+    while (data[nextIdx] != key && used[nextIdx / 2] && nextIdx != keyIdx)
+      nextIdx = nextIndex(nextIdx);
 
-    return nextIdx != keyIdx ? nextIdx : -1;
+    return nextIdx != keyIdx && used[nextIdx / 2] ? nextIdx : -1;
   }
 
   @Override
@@ -110,6 +119,23 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
 
   @Override
   public void justRemove(int key) {
+    int idx = readIndex(key);
+    if (idx == -1) return;
+
+    data[idx] = data[idx + 1] = 0;
+    used[idx / 2] = false;
+    size--;
+
+    // shift left
+    for (int i = nextIndex(idx); used[i / 2]; i = nextIndex(i)) {
+      int oldKey = data[i];
+      int oldValue = data[i + 1];
+      used[i / 2] = false;
+      size--;
+      data[i] = data[i + 1] = 0;
+
+      justPut(oldKey, oldValue);
+    }
 
   }
 

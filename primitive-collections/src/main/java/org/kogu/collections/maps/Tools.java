@@ -1,5 +1,7 @@
 package org.kogu.collections.maps;
 
+import java.util.Random;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -67,11 +69,33 @@ public enum Tools {
   }
 
 
-  public static void debug(int[] keys, int[] values, boolean[] used) {
-    checkArgument(keys.length == values.length);
-    checkArgument(values.length == used.length);
+  public static void debug(int[] data, boolean[] used) {
+    checkArgument(data.length == 2 * used.length);
 
+    StringBuilder dataRow = new StringBuilder();
+    for (int i = 0; i < used.length; i++) {
+      boolean b = used[i];
+      int keyIdx = 2 * i;
+      int key = data[keyIdx];
+      int value = data[keyIdx + 1];
 
+      dataRow.append(b ? '!' : ' ').append(key).append(',').append(value).append('\t').append('|');
+    }
+
+    System.out.println(dataRow.toString());
+  }
+
+  private static final Random rnd = new Random();
+
+  public static void shuffle(int[] arr) {
+    for (int i = arr.length; i > 1; i--)
+      swap(arr, i - 1, rnd.nextInt(i));
+  }
+
+  private static void swap(int[] arr, int i, int j) {
+    int tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
   }
 
 }

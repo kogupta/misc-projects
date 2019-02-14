@@ -29,9 +29,7 @@ public class IntIntMapOpenHashMapImplTest {
     }
 
     for (int i = 0; i < 1_000; i++) {
-      map.justRemove(i);
-      assertEquals(defValue, map.getOrDefault(i, defValue));
-      assertEquals(defValue, map.getOrDefault(-i, defValue));
+      remove(map, i);
     }
   }
 
@@ -40,10 +38,8 @@ public class IntIntMapOpenHashMapImplTest {
     int[] items = {10, 20, 50, 100, 1_000, 10_000};
 
     for (int item : items) {
-      System.out.println("---- item: " + item + " ----");
-      for (int key = 0; key < item; key++) {
-        map.justPut(key, key);
-      }
+      for (int key = 0; key < item; key++)
+        put(map, key);
 
       assertFalse(map.isEmpty());
       assertEquals(item, map.size());
@@ -56,20 +52,36 @@ public class IntIntMapOpenHashMapImplTest {
   }
 
   @Test
-  public void put_get_negative() {
+  public void put_get_negative_key() {
     int[] items = {10, 20, 50, 100, 1_000, 10_000};
 
     for (int item : items) {
-      System.out.println("---- item: " + item + " ----");
-      for (int key = 0; key < item; key++) {
-        map.justPut(key, -key);
-      }
+      for (int key = 0; key < item; key++)
+        put(map, -key);
 
       assertFalse(map.isEmpty());
       assertEquals(item, map.size());
 
       for (int i = 0; i < item; i++) {
-        int got = map.getOrDefault(i, defValue);
+        int got = map.getOrDefault(-i, 1);
+        assertEquals(-i, got);
+      }
+    }
+  }
+
+  @Test
+  public void put_get_negative_value() {
+    int[] items = {10, 20, 50, 100, 1_000, 10_000};
+
+    for (int item : items) {
+      for (int key = 0; key < item; key++)
+        put(map, key, -key);
+
+      assertFalse(map.isEmpty());
+      assertEquals(item, map.size());
+
+      for (int i = 0; i < item; i++) {
+        int got = map.getOrDefault(i, 1);
         assertEquals(-i, got);
       }
     }
@@ -80,13 +92,11 @@ public class IntIntMapOpenHashMapImplTest {
     int[] items = {10, 20, 50, 100, 1_000, 10_000};
 
     for (int item : items) {
-      System.out.println("---- item: " + item + " ----");
       map.clear();
       assertTrue(map.isEmpty());
       assertEquals(0, map.size());
 
-      int[] xs = new int[item];
-      Arrays.setAll(xs, i -> i);
+      int[] xs = intArray(item);
 
       for (int i = 0; i < 10; i++) {
         shuffle(xs);
@@ -102,19 +112,81 @@ public class IntIntMapOpenHashMapImplTest {
     }
   }
 
+  private static int[] intArray(int item) {
+    int[] xs = new int[item];
+    Arrays.setAll(xs, i -> i);
+    return xs;
+  }
+
   @Test
   public void remove() {
     int[] items = {10, 20, 50, 100, 1_000, 10_000};
 
     for (int item : items) {
-      System.out.println("---- item: " + item + " ----");
       for (int key = 0; key < item; key++) {
         map.justPut(key, key);
-        map.justRemove(key);
-        assertFalse(map.containsKey(key));
+        remove(map, key);
+        remove(map, key);
+        remove(map, key);
         assertTrue(map.isEmpty());
-        assertEquals(defValue, map.getOrDefault(key, defValue));
       }
     }
+  }
+
+  @Test
+  public void remove2() {
+    int[] items = {10, 20, 50, 100, 1_000, 10_000};
+
+    for (int item : items) {
+      clear(map);
+      int[] ns = intArray(item);
+      shuffle(ns);
+
+      for (int i = 0; i < ns.length; i++) {
+        int n = ns[i];
+        put(map, n);
+        assertEquals(i + 1, map.size());
+      }
+
+      assertEquals(item, map.size());
+
+      shuffle(ns);
+      for (int i = 0; i < ns.length; i++) {
+        int n = ns[i];
+        remove(map, n);
+        assertEquals(item - i - 1, map.size());
+      }
+
+      assertTrue(map.isEmpty());
+    }
+  }
+
+  private static void put(IntIntMap map, int n) {
+    map.justPut(n, n);
+    assertTrue(map.containsKey(n));
+    assertTrue(map.containsValue(n));
+    assertEquals(n, map.getOrDefault(n, defValue));
+  }
+
+  private static void put(IntIntMap map, int key, int value) {
+    map.justPut(key, value);
+    assertTrue(map.containsKey(key));
+    assertTrue(map.containsValue(value));
+    assertEquals(value, map.getOrDefault(key, defValue));
+  }
+
+  private static void remove(IntIntMap map, int key) {
+    map.justRemove(key);
+    assertFalse(map.containsKey(key));
+    assertFalse(map.containsValue(key));
+    assertEquals(defValue, map.getOrDefault(key, defValue));
+  }
+
+  private static void clear(IntIntMap map) {
+    assertNotNull(map);
+    map.clear();
+    assertTrue(map.isEmpty());
+    assertEquals(0, map.size());
+    assertEquals(defValue, map.getOrDefault(0, defValue));
   }
 }

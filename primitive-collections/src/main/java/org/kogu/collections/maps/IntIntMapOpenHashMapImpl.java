@@ -156,9 +156,11 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
 
   @Override
   public boolean containsValue(int value) {
-    for (int i = 1; i < data.length; i += 2) {
-      int val = data[i];
-      if (value == val) return true;
+    for (int i = 0; i < used.length; i++) {
+      boolean isUsed = used[i];
+      if (isUsed && data[2 * i + 1] == value) {
+        return true;
+      }
     }
 
     return false;

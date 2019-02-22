@@ -6,15 +6,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 class IntIntMapOpenHashMapImpl implements IntIntMap {
 
+  private final float loadFactor;
   // keys and values are interleaved
   // key: even locations
   // value: key + 1, odd locations
   private int[] data;
   private boolean[] used;
   private int size;
-  private final float loadFactor;
   // We will resize a map once it reaches this size
   private int sizeThreshold;
+  private int mask;
 
   IntIntMapOpenHashMapImpl(int size, float loadFactor) {
     checkArgument(size > 0);
@@ -23,6 +24,7 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
     // make array size power of 2
 //    final int capacity = Tools.arraySize(size, loadFactor);
     final int capacity = Tools.tableSizeFor(size);
+    mask = capacity - 1;
 
     data = new int[2 * capacity];
     used = new boolean[capacity];
@@ -48,6 +50,7 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
   }
 
   private void resize(int newCapacity) {
+    mask = newCapacity - 1;
     sizeThreshold = (int) (loadFactor * newCapacity);
 
     // swap keys/values/used to new capacity
@@ -88,12 +91,14 @@ class IntIntMapOpenHashMapImpl implements IntIntMap {
   }
 
   private int nextIndex(int keyIdx) {
-    return keyIdx + 2 == data.length ? 0 : keyIdx + 2;
+    return ( keyIdx + 1 ) & mask;
+//    return keyIdx + 2 == data.length ? 0 : keyIdx + 2;
   }
 
   private int arrayIndex(int key) {
-    int a = Tools.phiMix(key) % used.length;
-    return (a < 0) ? -a : a;
+    return Tools.phiMix(key) & mask;
+//    int a = Tools.phiMix(key) % used.length;
+//    return (a < 0) ? -a : a;
   }
 
   private int readIndex(int key) {

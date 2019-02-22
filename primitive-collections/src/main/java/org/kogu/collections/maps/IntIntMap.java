@@ -5,6 +5,10 @@ import java.util.function.IntBinaryOperator;
 import static java.util.Objects.requireNonNull;
 
 public interface IntIntMap {
+  static IntIntMap newInstance(int size, float loadFactor) {
+    return new IntIntMapOpenHashMapImpl(size, loadFactor);
+  }
+
   int getOrDefault(int key, int defaultValue);
 
   void justPut(int key, int value);
@@ -12,11 +16,12 @@ public interface IntIntMap {
   void justRemove(int key);
 
   int size();
-  boolean isEmpty();
-  boolean containsKey(int key);
-  boolean containsValue(int value);
 
-  void clear();
+  boolean isEmpty();
+
+  boolean containsKey(int key);
+
+  boolean containsValue(int value);
 
 //  void putAll(IntIntMap other);
 //  void putAll(Map<Integer, Integer> other);
@@ -28,6 +33,7 @@ public interface IntIntMap {
 //  int computeIfAbsent(int key, IntUnaryOperator mappingFunction);
 //  int computeIfPresent(int key, IntBinaryOperator mappingFunction);
 
+  void clear();
 
   /**
    * If the specified key is not already associated with a value,
@@ -67,5 +73,4 @@ public interface IntIntMap {
       return value;
     }
   }
-
 }

@@ -11,6 +11,16 @@ public enum Tools {
   ;
 
   /**
+   * 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2.
+   */
+  private static final int INT_PHI = 0x9E3779B9;
+  // copied from JDK j.u.c.HashMap
+  private static final int MAXIMUM_CAPACITY = 1 << 30;
+
+  //taken from FastUtil
+  private static final Random rnd = new Random();
+
+  /**
    * Return the least power of two greater than or equal to the specified value.
    * <p>
    * <p>Note that this function will return 1 when the argument is 0.
@@ -44,19 +54,10 @@ public enum Tools {
     return (int) s;
   }
 
-  //taken from FastUtil
-  /**
-   * 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2.
-   */
-  private static final int INT_PHI = 0x9E3779B9;
-
   public static int phiMix(final int x) {
     final int h = x * INT_PHI;
     return h ^ (h >> 16);
   }
-
-  // copied from JDK j.u.c.HashMap
-  private static final int MAXIMUM_CAPACITY = 1 << 30;
 
   public static int tableSizeFor(int cap) {
     int n = cap - 1;
@@ -67,7 +68,6 @@ public enum Tools {
     n |= n >>> 16;
     return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
   }
-
 
   public static void debug(int[] data, boolean[] used) {
     checkArgument(data.length == 2 * used.length);
@@ -84,8 +84,6 @@ public enum Tools {
 
     System.out.println(dataRow.toString());
   }
-
-  private static final Random rnd = new Random();
 
   public static void shuffle(int[] arr) {
     for (int i = arr.length; i > 1; i--)

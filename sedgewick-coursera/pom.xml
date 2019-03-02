@@ -1,0 +1,71 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.kogu.ds_algo</groupId>
+  <artifactId>sedgewick_coursera</artifactId>
+  <version>blergh</version>
+  <name>sedgewick_coursera</name>
+  <properties>
+    <jdk.version>1.8</jdk.version>
+  </properties>
+
+  <dependencies>
+    <!-- this version DOES NOT have certain methods in StdDraw! -->
+    <!-- download https://algs4.cs.princeton.edu/code/algs4.jar and install locally -->
+    <!-- install using -->
+    <!-- mvn install:install-file -Dfile=/path/to/algs4.jar -DgroupId=edu.princeton.cs -DartifactId=algs4 -Dversion=1.0.3 -Dpackaging=jar
+ -->
+    <dependency>
+      <groupId>edu.princeton.cs</groupId>
+      <artifactId>algs4</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>26.0-jre</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.jakewharton.byteunits</groupId>
+      <artifactId>byteunits</artifactId>
+      <version>0.9.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.14.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>sedgewick_coursera</finalName>
+    <plugins>
+      <!-- Set a compiler level -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>${jdk.version}</source>
+          <target>${jdk.version}</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

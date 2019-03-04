@@ -1,4 +1,4 @@
-package org.kogu.sedgewick_coursera.uf;
+package org.kogu.sedgewick_coursera.union_find;
 
 public class Test {
   public static void check(DynamicConnectivity dc) {

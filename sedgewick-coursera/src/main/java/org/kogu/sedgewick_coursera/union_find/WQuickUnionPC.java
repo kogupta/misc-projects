@@ -1,4 +1,4 @@
-package org.kogu.sedgewick_coursera.uf;
+package org.kogu.sedgewick_coursera.union_find;
 
 import java.util.Arrays;
 

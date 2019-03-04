@@ -1,4 +1,4 @@
-package org.kogu.sedgewick_coursera.uf;
+package org.kogu.sedgewick_coursera.union_find;
 
 interface DynamicConnectivity {
   void union(int p, int q);

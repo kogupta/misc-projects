@@ -1,21 +1,15 @@
-package org.kogu.sedgewick_coursera.uf;
+package org.kogu.sedgewick_coursera.union_find;
 
 import java.util.Arrays;
 
-class WQuickUnion implements DynamicConnectivity {
+class QuickUnion implements DynamicConnectivity {
   private final int[] id;
-  private final int[] sz;
   private int size;
 
-  WQuickUnion(int N) {
+  QuickUnion(int N) {
     assert N > 0 : "require: universe of items > 0";
-
     id = new int[N];
     Arrays.setAll(id, i -> i);
-
-    sz = new int[N];
-    Arrays.fill(sz, 1);
-
     size = N;
   }
 
@@ -24,18 +18,10 @@ class WQuickUnion implements DynamicConnectivity {
     int pRoot = rootOf(p);
     int qRoot = rootOf(q);
 
-    if (pRoot == qRoot) return;
-
-    // Make smaller root point to larger one.
-    if (sz[pRoot] < sz[qRoot]) {
+    if (pRoot != qRoot) {
       id[pRoot] = qRoot;
-      sz[qRoot] += sz[pRoot];
-    } else {
-      id[qRoot] = pRoot;
-      sz[pRoot] += sz[qRoot];
+      size--;
     }
-
-    size--;
   }
 
   @Override
@@ -44,17 +30,9 @@ class WQuickUnion implements DynamicConnectivity {
   }
 
   private int rootOf(int idx) {
-    while (id[idx] != idx) {
-      idx = id[idx];
-    }
-
-    return idx;
-  }
-
-  private int _rootOf(int idx) {
     if (id[idx] == idx) return idx;
 
-    return _rootOf(id[idx]);
+    return rootOf(id[idx]);
   }
 
   @Override
@@ -68,7 +46,7 @@ class WQuickUnion implements DynamicConnectivity {
   }
 
   public static void main(String[] args) {
-    WQuickUnion qu = new WQuickUnion(10);
+    QuickUnion qu = new QuickUnion(10);
     qu.union(4, 3);
     qu.union(3, 8);
     qu.union(6, 5);
@@ -76,7 +54,7 @@ class WQuickUnion implements DynamicConnectivity {
     qu.union(2, 1);
 
     assert qu.isConnected(8, 9);
-    int[] e0 = {0, 2, 2, 4, 4, 6, 6, 7, 4, 4};
+    int[] e0 = {0, 1, 1, 8, 3, 5, 5, 7, 8, 8};
     assert Arrays.equals(qu.id, e0);
     assert qu.size == 5;
     assert !qu.isConnected(5, 4);
@@ -85,7 +63,7 @@ class WQuickUnion implements DynamicConnectivity {
     qu.union(7, 2);
 
     assert qu.count() == 3;
-    int[] e1 = {6, 2, 2, 4, 4, 6, 6, 2, 4, 4};
+    int[] e1 = {0, 1, 1, 8, 3, 0, 5, 1, 8, 8};
     assert Arrays.equals(qu.id, e1);
   }
 }

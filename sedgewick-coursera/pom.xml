@@ -25,13 +25,13 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>26.0-jre</version>
-      <scope>test</scope>
+      <!--<scope>test</scope>-->
     </dependency>
     <dependency>
       <groupId>com.jakewharton.byteunits</groupId>
       <artifactId>byteunits</artifactId>
       <version>0.9.1</version>
-      <scope>test</scope>
+      <!--<scope>test</scope>-->
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>

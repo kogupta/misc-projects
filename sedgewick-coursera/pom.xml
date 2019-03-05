@@ -10,11 +10,10 @@
   </properties>
 
   <dependencies>
-    <!-- this version DOES NOT have certain methods in StdDraw! -->
+    <!-- this version DOES NOT have a few methods in StdDraw! -->
     <!-- download https://algs4.cs.princeton.edu/code/algs4.jar and install locally -->
     <!-- install using -->
-    <!-- mvn install:install-file -Dfile=/path/to/algs4.jar -DgroupId=edu.princeton.cs -DartifactId=algs4 -Dversion=1.0.3 -Dpackaging=jar
- -->
+    <!-- mvn install:install-file -Dfile=/path/to/algs4.jar -DgroupId=edu.princeton.cs -DartifactId=algs4 -Dversion=1.0.3 -Dpackaging=jar -->
     <dependency>
       <groupId>edu.princeton.cs</groupId>
       <artifactId>algs4</artifactId>
@@ -28,10 +27,9 @@
       <!--<scope>test</scope>-->
     </dependency>
     <dependency>
-      <groupId>com.jakewharton.byteunits</groupId>
-      <artifactId>byteunits</artifactId>
-      <version>0.9.1</version>
-      <!--<scope>test</scope>-->
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+      <version>8.2.2</version>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>

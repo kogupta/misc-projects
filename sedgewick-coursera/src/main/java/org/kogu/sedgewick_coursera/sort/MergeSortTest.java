@@ -4,7 +4,7 @@ import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.Arrays;
 
-import static org.kogu.sedgewick_coursera.sort.SortFunctions.time;
+import static org.kogu.sedgewick_coursera.CommonFunctions.time;
 import static org.kogu.sedgewick_coursera.sort.MergeHelper.merge2;
 
 public class MergeSortTest {

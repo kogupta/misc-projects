@@ -1,6 +1,7 @@
 package org.kogu.sedgewick_coursera.sort;
 
 import edu.princeton.cs.algs4.StdRandom;
+import org.kogu.sedgewick_coursera.CommonFunctions;
 
 import java.util.Arrays;
 
@@ -19,7 +20,7 @@ public class InsertionSort {
     for (int i = 0; i < xs.length; i++) {
       for (int j = i; j > 0; j--) {
         if (less(xs, j, j - 1)) {
-          swap(xs, j, j - 1);
+          CommonFunctions.swap(xs, j, j - 1);
         } else {
           break;
         }
@@ -49,7 +50,7 @@ public class InsertionSort {
     for (int i = from; i <= to; i++) {
       for (int j = i; j > from; j--) {
         if (less(xs, j, j-1))
-          swap(xs, j, j - 1);
+          CommonFunctions.swap(xs, j, j - 1);
         else
           break;
       }
@@ -80,11 +81,11 @@ public class InsertionSort {
     int[] xs = new int[size];
     Arrays.setAll(xs, i -> i);
     System.out.printf("already sorted [%,d]: ", size);
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
 
     StdRandom.shuffle(xs);
     System.out.print("unsorted: ");
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
 
     System.out.println();
     System.gc();

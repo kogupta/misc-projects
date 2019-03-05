@@ -1,6 +1,7 @@
 package org.kogu.sedgewick_coursera.sort;
 
 import edu.princeton.cs.algs4.StdRandom;
+import org.kogu.sedgewick_coursera.CommonFunctions;
 
 import java.util.Arrays;
 
@@ -20,7 +21,7 @@ public enum ShellExample {
       // h-sort the array
       for (int i = h; i < n; i++) {
         for (int j = i; j >= h && less(xs, j, j - h); j -= h) {
-          swap(xs, j, j - h);
+          CommonFunctions.swap(xs, j, j - h);
         }
       }
       assert isHsorted(xs, h);
@@ -52,11 +53,11 @@ public enum ShellExample {
     int[] xs = new int[size];
     Arrays.setAll(xs, i -> i);
     System.out.printf("already sorted [%,d]: ", size);
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
 
     StdRandom.shuffle(xs);
     System.out.print("unsorted: ");
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
 
     System.out.println();
     System.gc();

@@ -1,6 +1,7 @@
 package org.kogu.sedgewick_coursera.sort;
 
 import edu.princeton.cs.algs4.StdRandom;
+import org.kogu.sedgewick_coursera.CommonFunctions;
 
 import java.util.Arrays;
 
@@ -22,7 +23,7 @@ public class SelectionSort {
           minIndex = j;
       }
 
-      swap(xs, i, minIndex);
+      CommonFunctions.swap(xs, i, minIndex);
     }
 
     assertSorted(xs);
@@ -37,7 +38,7 @@ public class SelectionSort {
           minIndex = j;
       }
 
-      swap(xs, i, minIndex);
+      CommonFunctions.swap(xs, i, minIndex);
     }
 
     assertSorted(xs);
@@ -56,12 +57,12 @@ public class SelectionSort {
     int[] xs = new int[size];
     Arrays.setAll(xs, i -> i);
     System.out.printf("already sorted [%,d]: ", size);
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
     assertSorted(xs);
 
     StdRandom.shuffle(xs);
     System.out.print("unsorted: ");
-    time(() -> sort(xs));
+    CommonFunctions.time(() -> sort(xs));
     assertSorted(xs);
 
     System.out.println();

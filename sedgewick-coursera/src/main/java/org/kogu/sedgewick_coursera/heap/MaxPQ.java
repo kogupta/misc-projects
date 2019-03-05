@@ -1,12 +1,13 @@
 package org.kogu.sedgewick_coursera.heap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import org.kogu.sedgewick_coursera.CommonFunctions;
 
+import java.util.Arrays;
+
+import static org.kogu.sedgewick_coursera.CommonFunctions.assertionStatus;
 import static org.kogu.sedgewick_coursera.heap.HeapFunctions.sortDescending;
 import static org.kogu.sedgewick_coursera.heap.HeapFunctions.swap;
-import static org.kogu.sedgewick_coursera.sort.SortFunctions.createShuffledArray;
+import static org.kogu.sedgewick_coursera.CommonFunctions.createShuffledArray;
 
 public class MaxPQ {
   private final int defaultValue;
@@ -82,8 +83,7 @@ public class MaxPQ {
   }
 
   public static void main(String[] args) {
-    String status = MaxPQ.class.desiredAssertionStatus() ? "enabled" : "disabled";
-    System.out.println("Assertion: " + status);
+    assertionStatus();
     test(20);
   }
 

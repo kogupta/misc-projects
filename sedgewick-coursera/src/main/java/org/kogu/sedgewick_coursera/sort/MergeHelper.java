@@ -123,7 +123,5 @@ public enum MergeHelper {
     Arrays.setAll(xs, i -> i % 10);
     merge2(xs, new int[20], 0, 9, 19);
     assertSorted(xs);
-
-
   }
 }

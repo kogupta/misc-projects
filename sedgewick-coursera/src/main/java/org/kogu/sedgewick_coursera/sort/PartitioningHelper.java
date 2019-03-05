@@ -1,8 +1,8 @@
 package org.kogu.sedgewick_coursera.sort;
 
-import java.util.Arrays;
+import org.kogu.sedgewick_coursera.CommonFunctions;
 
-import static org.kogu.sedgewick_coursera.sort.SortFunctions.*;
+import java.util.Arrays;
 
 public class PartitioningHelper {
   private PartitioningHelper() {}
@@ -22,16 +22,16 @@ public class PartitioningHelper {
       if (i >= j) break;
 
       System.out.printf("swapping %d <-> %d%n", i, j);
-      swap(xs, i, j);
+      CommonFunctions.swap(xs, i, j);
       display(xs);
     }
 
-    swap(xs, lo, j);
+    CommonFunctions.swap(xs, lo, j);
     return j;
   }
 
   public static void main(String[] args) {
-    int[] xs = createShuffledArray(10);
+    int[] xs = CommonFunctions.createShuffledArray(10);
 
     System.out.println("--- before ---");
     display(xs);

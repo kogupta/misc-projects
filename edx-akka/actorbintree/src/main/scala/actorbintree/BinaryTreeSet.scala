@@ -4,6 +4,8 @@
 package actorbintree
 
 import akka.actor._
+import akka.event.LoggingReceive
+
 import scala.collection.immutable.Queue
 
 object BinaryTreeSet {
@@ -66,7 +68,11 @@ class BinaryTreeSet extends Actor {
 
   // optional
   /** Accepts `Operation` and `GC` messages. */
-  val normal: Receive = { case _ => ??? }
+  val normal: Receive = {
+    case ops: Operation =>
+      root ! ops
+    case GC => ???
+  }
 
   // optional
   /** Handles messages while garbage collection is performed.
@@ -89,19 +95,70 @@ object BinaryTreeNode {
   def props(elem: Int, initiallyRemoved: Boolean) = Props(classOf[BinaryTreeNode],  elem, initiallyRemoved)
 }
 
-class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Actor {
+class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Actor with ActorLogging {
   import BinaryTreeNode._
   import BinaryTreeSet._
 
-  var subtrees = Map[Position, ActorRef]()
-  var removed = initiallyRemoved
+  var subtrees: Map[Position, ActorRef] = Map[Position, ActorRef]()
+  var removed: Boolean = initiallyRemoved
+
 
   // optional
   def receive = normal
 
   // optional
   /** Handles `Operation` messages and `CopyTo` requests. */
-  val normal: Receive = { case _ => ??? }
+  val normal: Receive = LoggingReceive {
+    case put@Insert(requester: ActorRef, id: Int, x: Int) =>
+      log.info(toString() + " - insert: id:" + id + ", elem:" + x)
+      if      (x < elem) searchOrUpdate(put, Left)
+      else if (x > elem) searchOrUpdate(put, Right)
+      else {
+        removed = false
+        requester ! OperationFinished(id)
+      }
+
+    case msg@Contains(requester: ActorRef, id: Int, x: Int) =>
+      log.info(toString() + " - contains: id:" + id + ", elem:" + x)
+      if      (x == elem) requester ! ContainsResult(id, result = !removed)
+      else if (x < elem) contains(msg, Left)
+      else               contains(msg, Right)
+
+    case msg@Remove(requester: ActorRef, id: Int, x: Int) =>
+      log.info(toString() + " - remove: id:" + id + ", elem:" + x)
+      if      (x < elem) maybeRemove(msg, Left)
+      else if (x > elem) maybeRemove(msg, Right)
+      else {
+        removed = true
+        requester ! OperationFinished(id)
+      }
+
+    case _ => ???
+  }
+
+  private def maybeRemove(msg: Remove, position: Position): Unit = {
+    subtrees.get(position) match {
+      case Some(ref) => ref ! msg
+      case None => msg.requester ! OperationFinished(msg.id)
+    }
+  }
+
+  private def contains(msg: Contains, position: Position): Unit = {
+    subtrees.get(position) match {
+      case Some(ref) => ref ! msg
+      case None => msg.requester ! ContainsResult(msg.id, result = false)
+    }
+  }
+
+  private def searchOrUpdate(msg: Insert, position: Position): Unit = {
+    subtrees.get(position) match {
+      case Some(actorRef) => actorRef ! msg
+      case None =>
+        val ref = context.actorOf(props(msg.elem, initiallyRemoved = false))
+        subtrees = subtrees.updated(position, ref)
+        msg.requester ! OperationFinished(msg.id)
+    }
+  }
 
   // optional
   /** `expected` is the set of ActorRefs whose replies we are waiting for,
@@ -109,5 +166,5 @@ class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Actor {
     */
   def copying(expected: Set[ActorRef], insertConfirmed: Boolean): Receive = ???
 
-
+  override def toString = s"Node[subtrees:$subtrees, removed:$removed, elem:$elem, initRemoved:$initiallyRemoved]"
 }

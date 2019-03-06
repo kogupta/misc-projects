@@ -169,3 +169,11 @@ gradle-app.setting
 
 ## kotlin ##
 build
+
+
+## edx akka course
+assignment.sbt
+build.sbt
+project/*
+
+

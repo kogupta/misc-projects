@@ -1,12 +1,13 @@
 package kvstore
 
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, AllForOneStrategy, OneForOneStrategy, PoisonPill, Props, ReceiveTimeout, SupervisorStrategy, Terminated}
 import kvstore.Arbiter._
 
 import scala.collection.immutable.Queue
 import akka.actor.SupervisorStrategy.{Restart, Resume, Stop}
+import akka.dispatch.Futures
 
 import scala.annotation.tailrec
 import akka.pattern.{ask, pipe}
@@ -14,11 +15,12 @@ import akka.pattern.{ask, pipe}
 import scala.concurrent.duration._
 import akka.util.Timeout
 import kvstore.Persistence.{Persist, Persisted}
-import kvstore.Replica.OperationAck
-import kvstore.Replicator.SnapshotAck
-import kvstore.RetryPersistence.PersistenceTimeout
+import kvstore.Replica.{OperationAck, OperationFailed}
+import kvstore.Replicator.{Replicate, SnapshotAck}
+import kvstore.RetryPersistence.{AckFailure, PersistenceFailed, PersistenceTimeout}
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 object Replica {
   sealed trait Operation {
@@ -49,7 +51,7 @@ class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with
   /*
    * The contents of this actor is just a suggestion, you can implement it in any way you like.
    */
-  
+
   var kv = Map.empty[String, String]
   // a map from secondary replicas to replicators
   var secondaries = Map.empty[ActorRef, ActorRef]
@@ -96,18 +98,21 @@ class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with
 
     case Insert(key, value, id) =>
       kv = kv.updated(key, value)
-
-      implicit val timeout: Timeout = Timeout(1.second)
-      persister.ask(Persist(key, Some(value), id))
-        .map(_ => OperationAck(id))
-        .recover { case _ => OperationFailed(id) }
-        .pipeTo(sender())
-      replicators.foreach{ref => ref ! Replicate(key, Some(value), id) }
-
+      val retryActor = context.actorOf(RetryPersistence.props2(
+        sender(),
+        persister,
+        Persist(key, Some(value), id),
+        replicators))
+      retryActor ! PersistenceTimeout
 
     case Remove(key, id) =>
       kv = kv - key
-
+//      val retryActor =
+//        context.actorOf(RetryPersistence.props(sender(),
+//          persister,
+//          Persist(key, None, id),
+//          isPrimary = true))
+//      retryActor ! PersistenceTimeout
       implicit val timeout: Timeout = Timeout(1.second)
       persister.ask(Persist(key, None, id))
         .map(_ => OperationAck(id))
@@ -136,42 +141,76 @@ class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with
       }
       val persistMsg = Persist(key, maybeValue, seqNum)
       val retryActor =
-        context.actorOf(RetryPersistence.props(sender(), persister, persistMsg, isPrimary = false))
+        context.actorOf(RetryPersistence.props(sender(), persister, persistMsg))
       retryActor ! PersistenceTimeout
 
     case Snapshot(_, _, seqNum)  if seqNum > expectedSeq =>
   }
 }
 
-class RetryPersistence(src: ActorRef, persister: ActorRef, msg: Persist, isPrimary: Boolean)
+class RetryPersistence(src: ActorRef, persister: ActorRef, msg: Persist)
   extends Actor with ActorLogging {
   import context.dispatcher
-  context.system.scheduler.schedule(100.milliseconds, 100.milliseconds, self, PersistenceTimeout)
+  context.system.scheduler.schedule(0.milliseconds, 100.milliseconds, self, PersistenceTimeout)
+  context.system.scheduler.scheduleOnce(1.second, self, PersistenceFailed)
 
-  override def receive: Receive = if (isPrimary) primaryRetry else secondaryRetry
-
-  private val primaryRetry: Receive = {
-    case Persisted(_, id) =>
-      src ! OperationAck(id)
-      context.stop(self)
-
-    case PersistenceTimeout =>
-      persister ! msg
-  }
-
-  private val secondaryRetry: Receive = {
+  override def receive: Receive = {
     case Persisted(key, id) =>
       src ! SnapshotAck(key, id)
       context.stop(self)
 
     case PersistenceTimeout =>
       persister ! msg
+
+    case PersistenceFailed =>
+      src ! OperationFailed(msg.id)
+      context.stop(self)
+  }
+
+  }
+
+class PrimaryRetryPersistence(src: ActorRef, persister: ActorRef, msg: Persist, replicators: Set[ActorRef])
+  extends Actor with ActorLogging {
+
+  import context.dispatcher
+  context.system.scheduler.schedule(0.milliseconds, 100.milliseconds, self, PersistenceTimeout)
+  context.system.scheduler.scheduleOnce(1.second, self, AckFailure)
+
+  override def receive: Receive = {
+    case PersistenceTimeout =>
+      persister ! msg
+
+    case Persisted(_, id) =>
+      if (replicators.isEmpty) {
+        src ! OperationAck(id)
+      } else {
+        implicit val timeout: Timeout = Timeout(1.seconds)
+        val futures = replicators map { r: ActorRef =>
+          r ? Replicate(msg.key, msg.valueOption, id)
+        }
+        val response = Future.sequence(futures)
+          .map(_ => OperationAck(id))
+          .recover { case _ => OperationFailed(id) }
+          .pipeTo(src)
+      }
+      context.stop(self)
+
+    case AckFailure =>
+      src ! OperationFailed(msg.id)
+      context.stop(self)
   }
 }
 
 object RetryPersistence {
   case object PersistenceTimeout
+  case object PersistenceFailed
+  case object AckFailure
 
-  def props(src: ActorRef, persister: ActorRef, msg: Persist, isPrimary: Boolean): Props =
-    Props(new RetryPersistence(src, persister, msg, isPrimary))
+  def props(src: ActorRef, persister: ActorRef, msg: Persist): Props = {
+    Props(new RetryPersistence(src, persister, msg))
+  }
+
+  def props2(src: ActorRef, persister: ActorRef, msg: Persist, replicators: Set[ActorRef]): Props = {
+    Props(new PrimaryRetryPersistence(src, persister, msg, replicators))
+  }
 }

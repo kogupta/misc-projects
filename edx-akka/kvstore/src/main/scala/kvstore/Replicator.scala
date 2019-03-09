@@ -1,7 +1,5 @@
 package kvstore
 
-import java.util.Comparator
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 
 import scala.concurrent.duration._
@@ -46,18 +44,23 @@ class Replicator(val replica: ActorRef) extends Actor with ActorLogging {
       replica ! snapshot
 
     case SnapshotAck(key, seqNum) =>
-      val (ref, msg) = acks(seqNum)
-      acks = acks - seqNum
-      pending = pending.filterNot(s => s.key == key && s.seq == seqNum)
-
-      ref ! Replicated(key, msg.id)
+      acks.get(seqNum) match {
+        case Some((ref, msg)) =>
+          acks = acks - seqNum
+          pending = pending.filterNot(s => s.key == key && s.seq == seqNum)
+          ref ! Replicated(key, msg.id)
+        case None =>
+      }
 
     case Retry =>
-//      acks.foreach {
-//        case (seq, (_, Replicate(k, v, _))) => replica ! Snapshot(k, v, seq)
-//      }
-//      log.info("Retry message: pending: {}, acks: {}", pending, acks)
       pending.foreach(replica ! _)
+  }
+
+  override def postStop(): Unit = {
+    acks.foreach{
+      case (_, (client, replicate)) =>
+        client ! Replicated(replicate.key, replicate.id)
+    }
   }
 
   private def batch(snap: Snapshot): Vector[Snapshot] = {

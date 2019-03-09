@@ -1,26 +1,19 @@
 package kvstore
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorLogging, ActorRef, AllForOneStrategy, OneForOneStrategy, PoisonPill, Props, ReceiveTimeout, SupervisorStrategy, Terminated}
-import kvstore.Arbiter._
-
-import scala.collection.immutable.Queue
-import akka.actor.SupervisorStrategy.{Restart, Resume, Stop}
-import akka.dispatch.Futures
-
-import scala.annotation.tailrec
+import akka.actor.SupervisorStrategy.Resume
+import akka.actor.{Actor, ActorLogging, ActorRef, AllForOneStrategy, Props, SupervisorStrategy}
 import akka.pattern.{ask, pipe}
-
-import scala.concurrent.duration._
 import akka.util.Timeout
+import kvstore.Arbiter._
 import kvstore.Persistence.{Persist, Persisted}
 import kvstore.Replica.{OperationAck, OperationFailed}
 import kvstore.Replicator.{Replicate, SnapshotAck}
 import kvstore.RetryPersistence.{AckFailure, PersistenceFailed, PersistenceTimeout}
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.concurrent.duration._
 
 object Replica {
   sealed trait Operation {
@@ -43,10 +36,9 @@ object Replica {
 }
 
 class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with ActorLogging {
+  import Persistence._
   import Replica._
   import Replicator._
-  import Persistence._
-  import context.dispatcher
 
   /*
    * The contents of this actor is just a suggestion, you can implement it in any way you like.
@@ -97,7 +89,7 @@ class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with
       }
 
     case Insert(key, value, id) =>
-      kv = kv.updated(key, value)
+      kv = kv updated(key, value)
       val retryActor = context.actorOf(RetryPersistence.props2(
         sender(),
         persister,
@@ -107,19 +99,12 @@ class Replica(val arbiter: ActorRef, persistenceProps: Props) extends Actor with
 
     case Remove(key, id) =>
       kv = kv - key
-//      val retryActor =
-//        context.actorOf(RetryPersistence.props(sender(),
-//          persister,
-//          Persist(key, None, id),
-//          isPrimary = true))
-//      retryActor ! PersistenceTimeout
-      implicit val timeout: Timeout = Timeout(1.second)
-      persister.ask(Persist(key, None, id))
-        .map(_ => OperationAck(id))
-        .recover { case _ => OperationFailed(id) }
-        .pipeTo(sender())
-      replicators.foreach{ref => ref ! Replicate(key, None, id) }
-
+      val retryActor = context.actorOf(RetryPersistence.props2(
+        sender(),
+        persister,
+        Persist(key, None, id),
+        replicators))
+      retryActor ! PersistenceTimeout
 
     case Get(key, id) =>
       sender() ! GetResult(key, kv.get(key), id)
@@ -188,7 +173,8 @@ class PrimaryRetryPersistence(src: ActorRef, persister: ActorRef, msg: Persist, 
         val futures = replicators map { r: ActorRef =>
           r ? Replicate(msg.key, msg.valueOption, id)
         }
-        val response = Future.sequence(futures)
+
+        Future.sequence(futures)
           .map(_ => OperationAck(id))
           .recover { case _ => OperationFailed(id) }
           .pipeTo(src)

@@ -11,7 +11,10 @@
 
     <properties>
         <kotlin.version>1.3.21</kotlin.version>
+        <vavr.version>0.10.0</vavr.version>
+        <arrow.version>0.8.2</arrow.version>
         <junit.version>4.12</junit.version>
+        <jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -22,11 +25,40 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.vavr</groupId>
-            <artifactId>vavr</artifactId>
-            <version>0.10.0</version>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
-
+        <!--<dependency>-->
+            <!--<groupId>io.vavr</groupId>-->
+            <!--<artifactId>vavr</artifactId>-->
+            <!--<version>${vavr.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>io.vavr</groupId>-->
+            <!--<artifactId>vavr-kotlin</artifactId>-->
+            <!--<version>${vavr.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>io.arrow-kt</groupId>-->
+            <!--<artifactId>arrow-core-extensions</artifactId>-->
+            <!--<version>${arrow.version}</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-syntax</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-typeclasses</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>io.arrow-kt</groupId>-->
+            <!--<artifactId>arrow-extras-extensions</artifactId>-->
+            <!--<version>${arrow.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -47,6 +79,9 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>${jdk.version}</jvmTarget>
+                </configuration>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -74,10 +109,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
-
            <configuration>
-             <source>1.8</source>
-             <target>1.8</target>
+             <source>${jdk.version}</source>
+             <target>${jdk.version}</target>
            </configuration>
                 <executions>
                     <!-- Replacing default-compile as it is treated specially by maven -->
@@ -110,7 +144,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>${main.class}</mainClass>
+                            <!--<mainClass>${main.class}</mainClass>-->
                         </manifest>
                     </archive>
                 </configuration>
@@ -127,7 +161,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>${main.class}</mainClass>
+                                    <!--<mainClass>${main.class}</mainClass>-->
                                 </manifest>
                             </archive>
                             <descriptorRefs>

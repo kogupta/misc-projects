@@ -1,4 +1,4 @@
-package interview;
+package interview.permutation_combination;
 
 import java.util.*;
 import java.util.stream.Collectors;

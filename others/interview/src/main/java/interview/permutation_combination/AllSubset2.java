@@ -1,4 +1,4 @@
-package interview;
+package interview.permutation_combination;
 
 import java.util.Arrays;
 import java.util.HashSet;

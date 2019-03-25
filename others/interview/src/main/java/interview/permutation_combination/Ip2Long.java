@@ -1,4 +1,4 @@
-package interview;
+package interview.permutation_combination;
 
 import static java.lang.Integer.valueOf;
 

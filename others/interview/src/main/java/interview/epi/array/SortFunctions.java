@@ -50,4 +50,10 @@ public enum SortFunctions {
     arr[j] = tmp;
   }
 
+  public static void assertionStatus() {
+    String status = SortFunctions.class.desiredAssertionStatus() ? "enabled" : "disabled";
+    System.out.println("Assertion: " + status);
+    System.out.println("====================");
+  }
+
 }

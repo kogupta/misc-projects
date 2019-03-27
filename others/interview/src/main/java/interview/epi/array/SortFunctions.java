@@ -56,4 +56,15 @@ public enum SortFunctions {
     System.out.println("====================");
   }
 
+  public static String toString(int[] arr, int from, int to) {
+    StringBuilder sb = new StringBuilder();
+    sb.append('[');
+    for (int i = from; i < to; i++) {
+      sb.append(arr[i]);
+      if (i < to - 1) { sb.append(", ");}
+    }
+
+    sb.append(']');
+    return sb.toString();
+  }
 }

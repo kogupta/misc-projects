@@ -6,8 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jetbrains.kotlin.examples</groupId>
-    <artifactId>mixed-code-hello-world</artifactId>
+    <artifactId>func-prog-java-kotlin</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <description>Working through the Manning book func-prog-Java, joy-of-kotlin</description>
 
     <properties>
         <kotlin.version>1.3.21</kotlin.version>

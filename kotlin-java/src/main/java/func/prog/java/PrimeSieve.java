@@ -36,6 +36,7 @@ public final class PrimeSieve {
   }
 
   public static void main(String[] args) {
+    //noinspection Convert2MethodRef
     IntConsumer print = n -> System.out.println(n);
     primesTill(10).forEach(print);
     primesTill(100).limit(10).forEach(print);

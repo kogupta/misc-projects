@@ -1,5 +1,7 @@
 package interview.permutation_combination;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,18 +11,18 @@ import static java.lang.Integer.toBinaryString;
 
 public final class AllSubset2 {
   public static void main(String[] args) {
-    justPrint(Set.of());
-    justPrint(Set.of(1));
-    justPrint(Set.of(1, 2));
-    justPrint(Set.of(1, 2, 3));
-    justPrint(Set.of(1, 2, 3, 4));
-    justPrint(Set.of(1, 2, 3, 4, 5));
-    display(allSubsets(Set.of()));
-    display(allSubsets(Set.of(1)));
-    display(allSubsets(Set.of(1, 2)));
-    display(allSubsets(Set.of(1, 2, 3)));
-    display(allSubsets(Set.of(1, 2, 3, 4)));
-    display(allSubsets(Set.of(1, 2, 3, 4, 5)));
+    justPrint(ImmutableSet.of());
+    justPrint(ImmutableSet.of(1));
+    justPrint(ImmutableSet.of(1, 2));
+    justPrint(ImmutableSet.of(1, 2, 3));
+    justPrint(ImmutableSet.of(1, 2, 3, 4));
+    justPrint(ImmutableSet.of(1, 2, 3, 4, 5));
+    display(allSubsets(ImmutableSet.of()));
+    display(allSubsets(ImmutableSet.of(1)));
+    display(allSubsets(ImmutableSet.of(1, 2)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3, 4)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3, 4, 5)));
   }
 
   private static <T> void display(Iterator<Set<T>> xss) {
@@ -41,7 +43,7 @@ public final class AllSubset2 {
 //    int n = powerOf2(input.size());
     int n = 1 << input.size();
 
-    T[] ts = input.toArray(value -> (T[])new Object[value]);
+    T[] ts = input.toArray((T[]) new Object[input.size()]);
     Arrays.sort(ts);
     System.out.println("Elements: " + Arrays.toString(ts));
     for (int i = 0; i < n; i++) {
@@ -65,7 +67,7 @@ public final class AllSubset2 {
     private int position;
 
     private PowerSet(Set<T> input) {
-      elements = input.toArray(n -> (T[])new Object[n]);
+      elements = input.toArray((T[]) new Object[input.size()]);
       size = 1 << input.size();
     }
 

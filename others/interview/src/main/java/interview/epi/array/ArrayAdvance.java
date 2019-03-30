@@ -1,5 +1,7 @@
 package interview.epi.array;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,7 +88,7 @@ public final class ArrayAdvance {
 
     System.out.println("Path: " + jumps);
 
-    return maxIdx >= lastIdx ? jumps: List.of();
+    return maxIdx >= lastIdx ? jumps: ImmutableList.of();
   }
 
   private static int minJumpsToEnd(int[] arr) {

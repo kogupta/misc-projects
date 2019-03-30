@@ -19,8 +19,8 @@ public class DeadlockExample extends Thread {
   }
 
   public static void main(String... args) {
-    var a = new Object();
-    var b = new Object();
+    Object a = new Object();
+    Object b = new Object();
     new DeadlockExample(a, b).start();
     new DeadlockExample(b, a).start();
   }

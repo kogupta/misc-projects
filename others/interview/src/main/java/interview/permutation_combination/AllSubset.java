@@ -1,5 +1,7 @@
 package interview.permutation_combination;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -7,12 +9,12 @@ import static com.google.common.collect.Sets.newHashSet;
 
 public final class AllSubset {
   public static void main(String[] args) {
-    display(allSubsets(Set.of()));
-    display(allSubsets(Set.of(1)));
-    display(allSubsets(Set.of(1, 2)));
-    display(allSubsets(Set.of(1, 2, 3)));
-    display(allSubsets(Set.of(1, 2, 3, 4)));
-    display(allSubsets(Set.of(1, 2, 3, 4, 5)));
+    display(allSubsets(ImmutableSet.of()));
+    display(allSubsets(ImmutableSet.of(1)));
+    display(allSubsets(ImmutableSet.of(1, 2)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3, 4)));
+    display(allSubsets(ImmutableSet.of(1, 2, 3, 4, 5)));
   }
 
   private static <T> void display(Set<Set<T>> xss) {

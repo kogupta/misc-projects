@@ -67,12 +67,12 @@ public final class IntLinkedList implements IntIterator {
   public static void main(String[] args) {
     _assertionStatus();
 
-    System.out.println(IntLinkedList.of(1));
-    System.out.println(IntLinkedList.of(1, 2));
-    System.out.println(IntLinkedList.of(1, 2, 3));
-    System.out.println(IntLinkedList.of(1, 2, 3, 4));
+    System.out.println(of(1));
+    System.out.println(of(1, 2));
+    System.out.println(of(1, 2, 3));
+    System.out.println(of(1, 2, 3, 4));
 
-    IntLinkedList list = IntLinkedList.of(1, 2, 3, 4);
+    IntLinkedList list = of(1, 2, 3, 4);
     list.forEachRemainingInt(System.out::println);
   }
 

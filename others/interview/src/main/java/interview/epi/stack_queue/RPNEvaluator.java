@@ -40,8 +40,6 @@ public final class RPNEvaluator {
     assert obtained == expected : "Expected " + expected + ", got: " + obtained;
   }
 
-
-
   private static void test(String expression, BiFunction<String, String, Integer> evaluator, int expected) {
     int obtained = evaluator.apply(expression, " ");
     assert obtained == expected: "Expected " + expected + ", got: " + obtained;
@@ -190,6 +188,8 @@ public final class RPNEvaluator {
               break;
 
             default:
+              // ordinal and enum definition order
+              // gets rid of star paren predicate
               while (!operators.isEmpty() && operators.peek().ordinal() < op.ordinal()) {
                 Operator higherPrecOp = operators.pop();
                 xs.add(toChar(higherPrecOp));

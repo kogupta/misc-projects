@@ -5,6 +5,7 @@ import edu.princeton.cs.algs4.StdRandom;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.out;
 import static java.util.concurrent.TimeUnit.*;
 
 public final class CommonFunctions {
@@ -12,11 +13,11 @@ public final class CommonFunctions {
 
   public static void assertionStatus() {
     String status = CommonFunctions.class.desiredAssertionStatus() ? "enabled" : "disabled";
-    System.out.println("Assertion: " + status);
-    System.out.println();
+    out.println("Assertion: " + status);
+    out.println();
   }
 
-  public static <T extends Comparable<T>> void swap(T[] xs, int i, int j) {
+  public static <T> void swap(T[] xs, int i, int j) {
     T t = xs[i];
     xs[i] = xs[j];
     xs[j] = t;
@@ -35,7 +36,7 @@ public final class CommonFunctions {
     TimeUnit unit = chooseUnit(nanos);
     double value = (double) nanos / NANOSECONDS.convert(1, unit);
 
-    System.out.printf("%.4g %s%n", value, abbreviate(unit));
+    out.printf("%.4g %s%n", value, abbreviate(unit));
   }
 
   private static TimeUnit chooseUnit(long nanos) {
@@ -91,5 +92,26 @@ public final class CommonFunctions {
     int[] xs = new int[size];
     Arrays.setAll(xs, i -> i);
     return xs;
+  }
+
+  public static <T> void reverse(T[] array) {
+    for (int i = 0; i < array.length / 2; i++) {
+      int other = array.length - 1 - i;
+      swap(array, i, other);
+    }
+  }
+
+  public static void reverse(int[] array) {
+    for (int i = 0; i < array.length / 2; i++) {
+      int other = array.length - 1 - i;
+      swap(array, i, other);
+    }
+  }
+
+  public static void main(String[] args) {
+    int[] xs = createSortedArray(10);
+    System.out.println("before: " + Arrays.toString(xs));
+    reverse(xs);
+    System.out.println("after: " + Arrays.toString(xs));
   }
 }

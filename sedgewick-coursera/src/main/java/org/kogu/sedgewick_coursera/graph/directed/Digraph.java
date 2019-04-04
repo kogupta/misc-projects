@@ -1,18 +1,19 @@
-package org.kogu.sedgewick_coursera.graph;
+package org.kogu.sedgewick_coursera.graph.directed;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import org.kogu.sedgewick_coursera.graph.Graph;
 
 import java.util.Arrays;
 
 import static java.lang.System.lineSeparator;
 import static java.lang.System.out;
 
-public final class UndirectedGraph implements Graph {
+public final class Digraph implements Graph {
   private final int V; // # of vertices
   private int E;       // # of edges
   private final IntArrayList[] adj; // adjacency list for each vertex
 
-  public UndirectedGraph(int v) {
+  public Digraph(int v) {
     V = v;
     adj = new IntArrayList[V];
     Arrays.setAll(adj, i -> new IntArrayList());
@@ -21,7 +22,6 @@ public final class UndirectedGraph implements Graph {
   @Override
   public void addEdge(int v, int w) {
     adj[v].add(w);
-    adj[w].add(v);
     E++;
   }
 
@@ -33,6 +33,19 @@ public final class UndirectedGraph implements Graph {
 
   @Override
   public int edges() { return E;}
+
+  public Digraph reverse() {
+    Digraph reverse = new Digraph(V);
+    for (int v = 0; v < V; v++) {
+      IntArrayList neighbours = adj[v];
+      for (int i = 0; i < neighbours.size(); i++) {
+        int neighbour = neighbours.getInt(i);
+        reverse.addEdge(neighbour, v);
+      }
+    }
+
+    return reverse;
+  }
 
   @Override
   public String toString() {
@@ -48,14 +61,16 @@ public final class UndirectedGraph implements Graph {
   public static void main(String... args) {
     _assertionStatus();
 
-    Graph graph = Graph.example(UndirectedGraph::new);
+    Digraph graph = Graph.directedGraph(Digraph::new);
     System.out.println(graph);
 
+    out.println("--- reverse ---");
+    out.println(graph.reverse());
   }
 
   //<editor-fold desc="assertion status">
   private static void _assertionStatus() {
-    String status = UndirectedGraph.class.desiredAssertionStatus() ? "enabled" : "disabled";
+    String status = Digraph.class.desiredAssertionStatus() ? "enabled" : "disabled";
     out.println("Assertion: " + status);
     out.println("====================");
   }

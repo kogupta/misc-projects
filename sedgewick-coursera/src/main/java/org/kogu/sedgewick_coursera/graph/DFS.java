@@ -1,12 +1,12 @@
 package org.kogu.sedgewick_coursera.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIterable;
-import it.unimi.dsi.fastutil.ints.IntIterators;
-import it.unimi.dsi.fastutil.ints.IntStack;
-import org.kogu.sedgewick_coursera.IntIterator;
+import org.kogu.sedgewick_coursera.graph.undirected.UndirectedGraph;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
 
 import static java.lang.System.out;
 

@@ -1,13 +1,18 @@
 package org.kogu.sedgewick_coursera.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import org.kogu.sedgewick_coursera.graph.directed.Digraph;
+import org.kogu.sedgewick_coursera.graph.undirected.UndirectedGraph;
 
 import java.util.function.IntFunction;
 
-interface Graph {
+public interface Graph {
   void addEdge(int v, int w);
+
   IntArrayList adjacencyListOf(int v);
+
   int vertices();
+
   int edges();
 
   static Graph example(IntFunction<Graph> factory) {
@@ -23,8 +28,8 @@ interface Graph {
     return graph;
   }
 
-  static Graph tinyGraphExample(IntFunction<Graph> factory) {
-    Graph graph = factory.apply(13);
+  static UndirectedGraph undirectedGraph(IntFunction<UndirectedGraph> factory) {
+    UndirectedGraph graph = factory.apply(13);
 
     graph.addEdge(0, 6);
     graph.addEdge(0, 2);
@@ -48,5 +53,32 @@ interface Graph {
     graph.addEdge(12, 9);
 
     return graph;
+  }
+
+  static Digraph directedGraph(IntFunction<Digraph> constructor) {
+    Digraph digraph = constructor.apply(13);
+    digraph.addEdge(4, 2);
+    digraph.addEdge(2, 3);
+    digraph.addEdge(3, 2);
+    digraph.addEdge(6, 0);
+    digraph.addEdge(0, 1);
+    digraph.addEdge(2, 0);
+    digraph.addEdge(11, 12);
+    digraph.addEdge(12, 9);
+    digraph.addEdge(9, 10);
+    digraph.addEdge(9, 11);
+    digraph.addEdge(7, 9);
+    digraph.addEdge(10, 12);
+    digraph.addEdge(11, 4);
+    digraph.addEdge(4, 3);
+    digraph.addEdge(3, 5);
+    digraph.addEdge(6, 8);
+    digraph.addEdge(8, 6);
+    digraph.addEdge(5, 4);
+    digraph.addEdge(0, 5);
+    digraph.addEdge(6, 4);
+    digraph.addEdge(6, 9);
+    digraph.addEdge(7, 6);
+    return digraph;
   }
 }

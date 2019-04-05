@@ -66,7 +66,7 @@ public final class BFS {
   public static void main(String... args) {
     _assertionStatus();
 
-    Graph graph = Graph.example(UndirectedGraph::new);
+    Graph graph = SampleGraphs.example(UndirectedGraph::new);
     System.out.println(graph);
     BFS bfs = new BFS(graph, 0);
     System.out.println("path: " + Arrays.toString(bfs.from));

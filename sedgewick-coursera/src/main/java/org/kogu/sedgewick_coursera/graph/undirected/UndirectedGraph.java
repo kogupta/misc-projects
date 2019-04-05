@@ -2,6 +2,7 @@ package org.kogu.sedgewick_coursera.graph.undirected;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.kogu.sedgewick_coursera.graph.Graph;
+import org.kogu.sedgewick_coursera.graph.SampleGraphs;
 
 import java.util.Arrays;
 
@@ -49,7 +50,7 @@ public final class UndirectedGraph implements Graph {
   public static void main(String... args) {
     _assertionStatus();
 
-    Graph graph = Graph.example(UndirectedGraph::new);
+    Graph graph = SampleGraphs.example(UndirectedGraph::new);
     System.out.println(graph);
 
   }

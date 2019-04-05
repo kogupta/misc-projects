@@ -3,8 +3,8 @@ package org.kogu.sedgewick_coursera.graph.undirected;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import org.kogu.sedgewick_coursera.IntDeque;
-import org.kogu.sedgewick_coursera.graph.Graph;
+import org.kogu.sedgewick_coursera.IntStack;
+import org.kogu.sedgewick_coursera.graph.SampleGraphs;
 
 import java.util.Arrays;
 
@@ -23,7 +23,7 @@ public final class ConnectedComponents {
     components = new int[graph.vertices()];
     Arrays.fill(components, -1);
 
-    IntDeque stack = IntDeque.withExpectedSize(graph.vertices());
+    IntStack stack = IntStack.withExpectedSize(graph.vertices());
     int numComponents = 0;
     for (int v = 0; v < graph.vertices(); v++) {
       if (!visited[v]) {
@@ -35,7 +35,7 @@ public final class ConnectedComponents {
     this.count = numComponents;
   }
 
-  private void dfs(int v, IntDeque stack, int count) {
+  private void dfs(int v, IntStack stack, int count) {
     stack.push(v);
     components[v] = count;
     visited[v] = true;
@@ -81,7 +81,7 @@ public final class ConnectedComponents {
   public static void main(String... args) {
     _assertionStatus();
 
-    UndirectedGraph graph = Graph.undirectedGraph(UndirectedGraph::new);
+    UndirectedGraph graph = SampleGraphs.undirectedGraph(UndirectedGraph::new);
     System.out.println(graph);
 
     ConnectedComponents cc = new ConnectedComponents(graph);

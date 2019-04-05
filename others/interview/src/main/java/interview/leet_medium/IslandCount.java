@@ -4,6 +4,10 @@ import java.util.Arrays;
 
 /**
  * Given map of 1s and 0s - find # of islands.
+ *
+ * Current solution: union-find with path compression
+ * Other solution: undirected graph, find connected components
+ *
  */
 public final class IslandCount {
   private final boolean[] land;

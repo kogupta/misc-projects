@@ -2,6 +2,7 @@ package org.kogu.sedgewick_coursera.graph.directed;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.kogu.sedgewick_coursera.graph.Graph;
+import org.kogu.sedgewick_coursera.graph.SampleGraphs;
 
 import java.util.Arrays;
 
@@ -61,7 +62,7 @@ public final class Digraph implements Graph {
   public static void main(String... args) {
     _assertionStatus();
 
-    Digraph graph = Graph.directedGraph(Digraph::new);
+    Digraph graph = SampleGraphs.directedGraph(Digraph::new);
     System.out.println(graph);
 
     out.println("--- reverse ---");

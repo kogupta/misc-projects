@@ -1,6 +1,7 @@
 package org.kogu.sedgewick_coursera.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import org.kogu.sedgewick_coursera.graph.directed.Digraph;
 import org.kogu.sedgewick_coursera.graph.undirected.UndirectedGraph;
 
 import java.util.*;
@@ -23,10 +24,10 @@ public final class DfsOrBfs {
     from = new int[graph.vertices()];
     Arrays.fill(from, -1);
 
-    dfs2(sourceVertex);
+    traverse(sourceVertex);
   }
 
-  private void dfs2(int w) {
+  private void traverse(int w) {
     queue.add(w);
     visited[w] = true;
 
@@ -66,7 +67,13 @@ public final class DfsOrBfs {
   public static void main(String... args) {
     _assertionStatus();
 
-    Graph graph = Graph.example(UndirectedGraph::new);
+    out.println("---- undirected graph ----");
+    _check0(SampleGraphs.example(UndirectedGraph::new));
+    out.println("\n---- directed graph ----");
+    _check0(SampleGraphs.example(Digraph::new));
+  }
+
+  private static void _check0(Graph graph) {
     System.out.println(graph);
 
     System.out.println("== bfs ==");

@@ -1,7 +1,7 @@
 package streaming
 
 import akka.NotUsed
-import akka.stream.Materializer
+import akka.stream.{Graph, Materializer, SourceShape}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 
 import scala.concurrent.Future
@@ -67,15 +67,23 @@ object SimpleStreaming extends ExtraStreamOps {
   /**
     * Recover [[IllegalStateException]] values to a -1 value
     */
-  def recoverSingleElement(ints: Source[Int, NotUsed]): Source[Int, NotUsed] =
-    ???
+  def recoverSingleElement(ints: Source[Int, NotUsed]): Source[Int, NotUsed] = {
+    ints.recover{
+      case _: IllegalStateException => -1
+    }
+  }
 
   /**
     * Recover [[IllegalStateException]] values to the provided fallback Source
     *
     */
-  def recoverToAlternateSource(ints: Source[Int, NotUsed], fallback: Source[Int, NotUsed]): Source[Int, NotUsed] =
-    ???
+  def recoverToAlternateSource(ints: Source[Int, NotUsed], fallback: Source[Int, NotUsed]): Source[Int, NotUsed] = {
+    val pf: PartialFunction[Throwable, Source[Int, NotUsed]] = {
+      case _: IllegalStateException => fallback
+    }
+
+    ints.recoverWithRetries(-1, pf)
+  }
 
   // working with rate
 
@@ -83,7 +91,7 @@ object SimpleStreaming extends ExtraStreamOps {
     * Provide a Flow that will be able to continue receiving elements from its upstream Source
     * and "sum up" values while the downstream (the Sink to which this Flow will be attached).
     *
-    * In this way we are able to keep the upstream running it its nominal rate, while accumulating
+    * In this way we are able to keep the upstream running in its nominal rate, while accumulating
     * all information. The downstream will then consume the accumulated values also at its nominal rate,
     * which in this case we know / expect to be slower than the upstream.
     *
@@ -92,12 +100,13 @@ object SimpleStreaming extends ExtraStreamOps {
     *
     * If you'd like to see the exact events happening you can call `.logAllEvents` on the Flow you are returning here
     */
-  def sumUntilBackpressureGoesAway: Flow[Int, Int, _] =
-    ???
+  def sumUntilBackpressureGoesAway: Flow[Int, Int, _] = {
+    Flow[Int].conflate(_ + _)
+  }
 
   /**
     * A faster downstream wants to consume elements, yet the upstream is slow at providing them.
-    * Provide a Flow that is able to extrapolate "invent" values by repeating the previously emitted value.
+    * Provide a Flow that is able to extrapolate/"invent" values by repeating the previously emitted value.
     *
     * This could be seen as a "keepLast", where the stage keeps the last observed value from upstream.
     *
@@ -105,7 +114,8 @@ object SimpleStreaming extends ExtraStreamOps {
     *
     * See also [[Iterator.continually]]
     */
-  def keepRepeatingLastObservedValue: Flow[Int, Int, _] =
-    ???
+  def keepRepeatingLastObservedValue: Flow[Int, Int, _] = {
+    Flow[Int].extrapolate(n => Iterator.continually(n))
+  }
 
 }

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class EdgeWeightedGraph {
+public final class EdgeWeightedGraph implements EWGraph {
   private final int V;
   private final List<Edge>[] adj;
   private int E;
@@ -17,16 +17,18 @@ public final class EdgeWeightedGraph {
     Arrays.setAll(adj, i -> new ArrayList<>());
   }
 
-  public int E() { return E;}
+  @Override
+  public int numberOfEdges() { return E;}
 
-  public int V() { return V;}
+  @Override
+  public int numberOfVertices() { return V;}
 
-  public Iterable<Edge> adj(int v) { return adj[v];}
+  @Override
+  public Iterable<Edge> neighbours(int v) { return adj[v];}
 
-  public Iterable<Edge> edges() {
-    return Iterables.concat(adj);
-  }
+  @Override public Iterable<Edge> allEdges() { return Iterables.concat(adj);}
 
+  @Override
   public void addEdge(Edge e) {
     int v = e.either(), w = e.other(v);
     adj[v].add(e);

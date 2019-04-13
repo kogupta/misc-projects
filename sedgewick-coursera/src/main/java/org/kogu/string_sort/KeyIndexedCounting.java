@@ -21,6 +21,9 @@ import static org.kogu.sedgewick_coursera.sort.SortFunctions.isSorted;
 //  sample size: 100,000    | 83.60 ms -vs- 415.1 ms
 //  sample size: 1,000,000  | 2.258 s -vs- 2.960 s
 //  sample size: 10,000,000 | 28.44 s -vs- 43.77 s
+//
+// Please note: key indexed sorting for fixed-width strings is fast/probably better than JDK merge sort
+// but it is no patch on JDK quicksort!
 public final class KeyIndexedCounting {
   private static final Random r = new Random(31_01_2010);
   private static final Comparator<String> cmp = Comparator.comparingLong(Long::valueOf);
@@ -28,7 +31,7 @@ public final class KeyIndexedCounting {
   public static void main(String[] args) {
     _assertionStatus();
 
-    final int width = 10, sample = 10;
+    final int width = 10;
 
     for (int i = 10; i <= 10_000_000; i *= 10) {
       out.printf("sample size: %,d%n", i);
@@ -37,11 +40,15 @@ public final class KeyIndexedCounting {
 //    out.println(join(",\n", numbers));
       time(() -> lsd(width, numbers));
       assert isSorted(numbers, cmp);
+      System.gc();
 
       // comparision
       shuffle(r, numbers);
       time(() -> Arrays.sort(numbers, cmp));
+      System.gc();
 
+      shuffle(r, numbers);
+      time(() -> Arrays.stream(numbers).mapToLong(s -> Long.valueOf(s)).sorted().toArray());
       System.gc();
     }
 

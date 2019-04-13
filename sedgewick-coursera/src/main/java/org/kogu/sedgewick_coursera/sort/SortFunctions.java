@@ -3,9 +3,7 @@ package org.kogu.sedgewick_coursera.sort;
 import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import static java.util.concurrent.TimeUnit.*;
+import java.util.Comparator;
 
 public enum SortFunctions {
   ;
@@ -15,6 +13,15 @@ public enum SortFunctions {
       T x = xs[i];
       T y = xs[i + 1];
       int n = x.compareTo(y);
+      if (n > 0) throw new AssertionError();
+    }
+  }
+
+  public static <T> void assertSorted(T[] xs, Comparator<T> cmp) {
+    for (int i = 0; i < xs.length - 1; i++) {
+      T x = xs[i];
+      T y = xs[i + 1];
+      int n = cmp.compare(x, y);
       if (n > 0) throw new AssertionError();
     }
   }
@@ -33,6 +40,16 @@ public enum SortFunctions {
       T t = xs[i];
       T prev = xs[i - 1];
       if (less(t, prev)) return false;
+    }
+
+    return true;
+  }
+
+  public static <T> boolean isSorted(T[] xs, Comparator<T> cmp) {
+    for (int i = 1; i < xs.length; i++) {
+      T t = xs[i];
+      T prev = xs[i - 1];
+      if (cmp.compare(t, prev) < 0) return false;
     }
 
     return true;

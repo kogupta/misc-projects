@@ -6,7 +6,8 @@
   <version>blergh</version>
   <name>sedgewick_coursera</name>
   <properties>
-    <jdk.version>1.8</jdk.version>
+<!--    <jdk.version>1.8</jdk.version>-->
+    <jdk.version>12</jdk.version>
   </properties>
 
   <dependencies>
@@ -60,8 +61,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
-          <source>${jdk.version}</source>
-          <target>${jdk.version}</target>
+          <release>${jdk.version}</release>
+          <compilerArgs>--enable-preview</compilerArgs>
         </configuration>
       </plugin>
     </plugins>

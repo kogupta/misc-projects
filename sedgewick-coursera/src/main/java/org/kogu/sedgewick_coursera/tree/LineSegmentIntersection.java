@@ -12,6 +12,7 @@ public final class LineSegmentIntersection {
     Vertical;   // for vertical lines, start/end does not make sense for x co-ordinates
   }
 
+  // (Point, Event) or, Pair<Point, Event>
   private static final class PointEvent {
     final Point point;
     final Event event;

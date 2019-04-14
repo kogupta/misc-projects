@@ -1,4 +1,4 @@
-package org.kogu.string_sort;
+package org.kogu.sedgewick_coursera.string_sort;
 
 import java.util.Arrays;
 import java.util.Comparator;

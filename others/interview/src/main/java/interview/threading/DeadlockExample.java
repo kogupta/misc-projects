@@ -1,5 +1,6 @@
 package interview.threading;
 
+// java specialists example
 public class DeadlockExample extends Thread {
   private final Object monitor1, monitor2;
 

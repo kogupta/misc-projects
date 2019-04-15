@@ -11,9 +11,20 @@ import java.util.stream.Collectors;
 
 public final class ZeroSumSubArray {
   public static void main(String[] args) {
-    int[] xs = {-2, 4, 9, 3, -8, -6, 4, 9, 1, 9};
-    System.out.println(Arrays.toString(xs));
+    find(new int[]{-2, 4, 9, 3, -8, -6, 4, 9, 1, 9});
+    find(new int[]{0, 1, -1, 0});
+    find(new int[]{4, 2, -3, 1, 6});
+    find(new int[]{4, 2, 0, 1, 6});
+    find(new int[]{-3, 2, 3, 1, 6});
+  }
 
+  private static void find(int[] xs) {
+    System.out.println(Arrays.toString(xs));
+    zeroSumSubArray(xs);
+    System.out.println("--------------------");
+  }
+
+  private static void zeroSumSubArray(int[] xs) {
     // this is only for tracing purpose
     Map<Integer, Integer> prefixSum = new LinkedHashMap<>(xs.length);
     Multimap<Integer, Integer> inv = LinkedListMultimap.create();
@@ -29,10 +40,9 @@ public final class ZeroSumSubArray {
     }
 
     displayMap(prefixSum);
+    displayMap(inv.asMap());
 
-    System.out.println(inv);
-
-    System.out.println("Zero sum arrays between: ");
+    System.out.println("Zero sum arrays between: [closed, open range)");
     String s = inv.asMap().values().stream()
         .filter(integers -> integers.size() > 1)
         .map(ZeroSumSubArray::extractMinMax)
@@ -57,7 +67,7 @@ public final class ZeroSumSubArray {
     }
   }
 
-  private static void displayMap(Map<Integer, Integer> prefixSum) {
+  private static <K, V> void displayMap(Map<K, V> prefixSum) {
     String s = prefixSum.entrySet()
         .stream()
         .map(e -> e.getKey() + ": " + e.getValue())

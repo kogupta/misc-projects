@@ -25,6 +25,11 @@ public final class T9Mnemonic {
     List<String> mnemonics = mnemonicsOf(number);
     assert mnemonics.contains("ACRONYM");
     assert mnemonics.contains("ABPOMZN");
+
+    for (String s : mnemonics) {
+      String got = toNumber(s);
+      assert number.equals(got) : "Expected: " + number + ", got: " + got;
+    }
   }
 
   private static String toNumber(String mnemonic) {

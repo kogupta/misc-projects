@@ -48,7 +48,7 @@ public final class SpiralMatrix {
     int cols = grid[0].length;
     assert rows == cols;
 
-    int mid = (rows / 2) * 2 == rows ? rows / 2 : (rows / 2 + 1);
+    int mid = isEven(rows) ? rows / 2 : (rows / 2 + 1);
 
     List<Integer> path = new ArrayList<>(rows * rows);
 
@@ -82,13 +82,17 @@ public final class SpiralMatrix {
     return path;
   }
 
+  private static boolean isEven(int rows) {
+    return (rows / 2) * 2 == rows;
+  }
+
   private static int[][] buildGrid(List<Integer> spiralPath) {
     int n = (int) Math.sqrt(spiralPath.size());
     assert n * n == spiralPath.size();
 
     int[][] result = new int[n][n];
 
-    int mid = (n / 2) * 2 == n ? n / 2 : (n / 2 + 1);
+    int mid = isEven(n) ? n / 2 : (n / 2 + 1);
 
     int idx = 0;
     for (int offset = 0; offset < mid; offset++) {

@@ -21,7 +21,7 @@ public class PartitioningHelper {
       // check if pointers cross
       if (i >= j) break;
 
-      System.out.printf("swapping %d <-> %d%n", i, j);
+      System.out.printf("swapping indices %d <-> %d%n", i, j);
       CommonFunctions.swap(xs, i, j);
       display(xs);
     }

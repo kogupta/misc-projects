@@ -49,7 +49,7 @@ public final class FirstGreaterThanK {
 
 
   @NotNull
-  private static BST<Integer, String> sampleBST2() {
+  static BST<Integer, String> sampleBST2() {
     BST<Integer, String> bst;
     bst = new BST<>(of(108, "A"));
 
@@ -69,7 +69,7 @@ public final class FirstGreaterThanK {
 
   @NotNull
   // fig 15.1, page 255
-  private static BST<Integer, String> sampleBST() {
+  static BST<Integer, String> sampleBST() {
     var bst = new BST<>(of(19, "A"));
 
     bst.put(7, "B");

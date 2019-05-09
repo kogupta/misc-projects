@@ -2,15 +2,21 @@ package large_file_test;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.CharBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.System.nanoTime;
 import static java.lang.System.out;
@@ -29,11 +35,21 @@ import static java.util.concurrent.TimeUnit.*;
 // download link: https://www.fec.gov/files/bulk-downloads/2018/indiv18.zip
 // posts: https://stuartmarks.wordpress.com/2019/01/11/processing-large-files-in-java/
 public final class Main {
+  private static final Pattern namePat = Pattern.compile(", \\s*([^, ]+)");
   private static final int[] indices = {0, 432, 43243};
   private static final String parentDir = "C:\\Users\\kohin\\Downloads\\java-large-file-test";
-  private static final String[] files = {"10k_rows.txt", "100k_rows.txt", "200k_rows.txt",
-      "400k_rows.txt", "800k_rows.txt", "1M_rows.txt", "10M_rows.txt", "itcont.txt"
+  private static final String[] files = {
+      "10k_rows.txt",
+      "100k_rows.txt",
+      "200k_rows.txt",
+      "400k_rows.txt",
+      "800k_rows.txt",
+      "1M_rows.txt",
+      "10M_rows.txt",
+      "itcont.txt"
   };
+  private static final Comparator<Object2IntMap.Entry<String>> fNameCmp =
+      Comparator.comparingInt(e -> e.getIntValue());
 
   public static void main(String[] args) throws IOException {
     // sample row:
@@ -54,16 +70,21 @@ public final class Main {
     Int2IntOpenHashMap int2intMap = new Int2IntOpenHashMap();
 
     try (BufferedReader bReader = newBufferedReader(path, US_ASCII)) {
-      String[] dateNamePair = new String[2];
+      CharSequence[] dateNamePair = new CharSequence[2];
+      dateNamePair[0] = CharBuffer.allocate(6);
 
       String line;
       while ((line = bReader.readLine()) != null) {
         parse(line, dateNamePair);
-        int yearMonth = Integer.parseInt(dateNamePair[0], 10);
+        int yearMonth = Integer.parseInt(dateNamePair[0], 0, 6, 10);
         int2intMap.merge(yearMonth, 1, Integer::sum);
-        names.add(dateNamePair[1].toString());
+
+        String name = dateNamePair[1].toString();
+        names.add(name);
       }
     }
+
+    Object2IntMap.Entry<String> freqFName = mostFreqFirstName(names);
 
     displayTime(nanoTime() - start);
 
@@ -76,9 +97,24 @@ public final class Main {
     }
 
     displayDonations(int2intMap);
+
+    out.printf("[%s] is most frequently occurring first name, occurring [%,d] times%n",
+        freqFName.getKey(), freqFName.getIntValue());
   }
 
-  private static void parse(String line, String[] acc) {
+  private static Object2IntMap.Entry<String> mostFreqFirstName(List<String> names) {
+    Object2IntOpenHashMap<String> firstNames = new Object2IntOpenHashMap<>(names.size());
+    names.parallelStream()
+        .map(namePat::matcher)
+        .filter(Matcher::find)
+        .map(matcher -> matcher.group(1))
+        .forEach(fName -> firstNames.mergeInt(fName, 1, Integer::sum));
+
+    return Collections.max(firstNames.object2IntEntrySet(), fNameCmp);
+  }
+
+  // split a row by '|' and capture 5th and 8th column
+  private static void parse(String line, CharSequence[] acc) {
     int col = 0;
     for (int i = 0, start = 0, len = line.length(); i < len && col < 8; i++) {
       char c = line.charAt(i);
@@ -87,7 +123,13 @@ public final class Main {
         if (col == 8) {
           acc[1] = line.substring(start, i);
         } else if (col == 5) {
-          acc[0] = line.substring(start, start + 6);
+          CharBuffer buffer = (CharBuffer) acc[0];
+          buffer.clear();
+
+          for (int j = start; j < start + 6; j++)
+            buffer.put(line.charAt(j));
+
+          buffer.flip();
         }
         start = i + 1;
       }
@@ -114,7 +156,6 @@ public final class Main {
     double value = (double) nanos / NANOSECONDS.convert(1, unit);
     out.printf("Time taken: %.4g %s%n", value, abbreviate(unit));
   }
-  // split a row by '|' and capture 5th and 8th column
 
   private static TimeUnit chooseUnit(long nanos) {
     if (DAYS.convert(nanos, NANOSECONDS) > 0) {

@@ -54,13 +54,12 @@ public final class Main {
     Int2IntOpenHashMap int2intMap = new Int2IntOpenHashMap();
 
     try (BufferedReader bReader = newBufferedReader(path, US_ASCII)) {
-      CharSequence[] dateNamePair = new CharSequence[2];
-      dateNamePair[0] = new FixedWidthCharSeq(6);
+      String[] dateNamePair = new String[2];
 
       String line;
       while ((line = bReader.readLine()) != null) {
         parse(line, dateNamePair);
-        int yearMonth = Integer.parseInt(dateNamePair[0], 0, 6, 10);
+        int yearMonth = Integer.parseInt(dateNamePair[0], 10);
         int2intMap.merge(yearMonth, 1, Integer::sum);
         names.add(dateNamePair[1].toString());
       }
@@ -79,7 +78,7 @@ public final class Main {
     displayDonations(int2intMap);
   }
 
-  private static void parse(String line, CharSequence[] acc) {
+  private static void parse(String line, String[] acc) {
     int col = 0;
     for (int i = 0, start = 0, len = line.length(); i < len && col < 8; i++) {
       char c = line.charAt(i);
@@ -88,8 +87,7 @@ public final class Main {
         if (col == 8) {
           acc[1] = line.substring(start, i);
         } else if (col == 5) {
-          FixedWidthCharSeq seq = (FixedWidthCharSeq) acc[0];
-          seq.readFrom(line, start);
+          acc[0] = line.substring(start, start + 6);
         }
         start = i + 1;
       }
@@ -107,6 +105,7 @@ public final class Main {
     int2intMap.int2IntEntrySet()
         .stream()
         .sorted(cmp)
+        .limit(10)
         .forEach(x -> out.printf("%d => %,9d%n", x.getIntKey(), x.getIntValue()));
   }
 

@@ -1,20 +1,16 @@
 package large_file_test;
 
-import jdk.internal.ref.Cleaner;
-import sun.nio.ch.DirectBuffer;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.util.Iterator;
 
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.StandardOpenOption.READ;
 
 // https://sourceforge.net/p/kdgcommons/code/HEAD/tree/trunk//src/main/java/net/sf/kdgcommons/buffer/MappedFileBuffer.java
-public final class MappedFileBuffer implements Iterator<String>, AutoCloseable {
+public final class MappedFileBuffer {
   private final static int MAX_SEGMENT_SIZE = 1 << 27; // 1 GB, assures alignment
 
   private final long segmentSize;
@@ -46,29 +42,5 @@ public final class MappedFileBuffer implements Iterator<String>, AutoCloseable {
     ByteBuffer buf = _buffers[(int) (index / segmentSize)];
     buf.position((int) (index % segmentSize));
     return buf;
-  }
-
-
-  @Override
-  public void close() throws Exception {
-    for (MappedByteBuffer buffer : _buffers) {
-      sun.nio.ch.DirectBuffer directBuffer = (DirectBuffer) buffer;
-      Cleaner cleaner = directBuffer.cleaner();
-      if (cleaner != null) {
-        cleaner.clean();
-      }
-    }
-
-
-  }
-
-  @Override
-  public boolean hasNext() {
-    return false;
-  }
-
-  @Override
-  public String next() {
-    return null;
   }
 }

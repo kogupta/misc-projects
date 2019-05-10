@@ -50,6 +50,10 @@ public final class Main {
   };
   private static final Comparator<Object2IntMap.Entry<String>> fNameCmp =
       Comparator.comparingInt(e -> e.getIntValue());
+  private static final Comparator<Int2IntMap.Entry> donationCmp = Comparator
+      .comparingInt((Int2IntMap.Entry entry) -> entry.getIntValue())
+      .thenComparingInt(entry -> entry.getIntKey())
+      .reversed();
 
   public static void main(String[] args) throws IOException {
     // sample row:
@@ -58,14 +62,14 @@ public final class Main {
     for (String file : files) {
       Path path = Paths.get(parentDir, file);
       out.println("to process: " + path);
+      long start = nanoTime();
       process(path);
+      displayTime(nanoTime() - start);
       out.println();
     }
   }
 
   private static void process(Path path) throws IOException {
-    long start = nanoTime();
-
     List<String> names = new ArrayList<>();
     Int2IntOpenHashMap int2intMap = new Int2IntOpenHashMap();
 
@@ -86,8 +90,6 @@ public final class Main {
 
     Object2IntMap.Entry<String> freqFName = mostFreqFirstName(names);
 
-    displayTime(nanoTime() - start);
-
     out.printf("# of rows: %,3d%n", names.size());
 
     for (int index : indices) {
@@ -104,7 +106,7 @@ public final class Main {
 
   private static Object2IntMap.Entry<String> mostFreqFirstName(List<String> names) {
     Object2IntOpenHashMap<String> firstNames = new Object2IntOpenHashMap<>(names.size());
-    names.parallelStream()
+    names.stream()
         .map(namePat::matcher)
         .filter(Matcher::find)
         .map(matcher -> matcher.group(1))
@@ -137,16 +139,11 @@ public final class Main {
   }
 
   private static void displayDonations(Int2IntOpenHashMap int2intMap) {
-    Comparator<Int2IntMap.Entry> cmp = Comparator
-        .comparingInt(Int2IntMap.Entry::getIntValue)
-        .thenComparingInt(Int2IntMap.Entry::getIntKey)
-        .reversed();
-
     out.println("Monthly donations: ");
 
     int2intMap.int2IntEntrySet()
         .stream()
-        .sorted(cmp)
+        .sorted(donationCmp)
         .limit(10)
         .forEach(x -> out.printf("%d => %,9d%n", x.getIntKey(), x.getIntValue()));
   }

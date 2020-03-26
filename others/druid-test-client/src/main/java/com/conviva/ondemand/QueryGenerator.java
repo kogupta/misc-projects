@@ -34,13 +34,13 @@ public class QueryGenerator {
     System.out.printf("To execute %d daily queries for %s metrics%n", intervals.size(), metricCount);
     buildAndPrintQueries(url, isMgw, "PT1M", intervals, prop);
 
-//    List<String> weeklyIntervals = Intervals.weeklyQueries();
-//    System.out.printf("To execute %d weekly queries for %s metrics%n", weeklyIntervals.size(), metricCount);
-//    buildAndPrintQueries(url, isMgw, "PT1H", weeklyIntervals, prop);
-//
-//    List<String> monthlyIntervals = Intervals.monthlyQueries();
-//    System.out.printf("To execute %d monthly queries for %s metrics%n", monthlyIntervals.size(), metricCount);
-//    buildAndPrintQueries(url, isMgw, "PT1H", monthlyIntervals, prop);
+    List<String> weeklyIntervals = Intervals.weeklyQueries();
+    System.out.printf("To execute %d weekly queries for %s metrics%n", weeklyIntervals.size(), metricCount);
+    buildAndPrintQueries(url, isMgw, "PT1H", weeklyIntervals, prop);
+
+    List<String> monthlyIntervals = Intervals.monthlyQueries();
+    System.out.printf("To execute %d monthly queries for %s metrics%n", monthlyIntervals.size(), metricCount);
+    buildAndPrintQueries(url, isMgw, "PT1H", monthlyIntervals, prop);
   }
 
   private static void buildAndPrintQueries(String url, boolean isMgw, String granularity,

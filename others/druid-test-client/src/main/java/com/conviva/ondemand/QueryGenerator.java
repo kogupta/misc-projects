@@ -9,7 +9,7 @@ import java.util.Properties;
 import static com.conviva.ondemand.Utils.*;
 
 public class QueryGenerator {
-  private static final String urlTemplate = "time curl -v -X POST -H 'Content-Type: application/json' '$ENDPOINT' -d '$PAYLOAD'";
+  private static final String urlTemplate = "time curl -X POST -H 'Content-Type: application/json' '$ENDPOINT' -d '$PAYLOAD'";
 
   public static void main(String[] args) throws IOException {
     // TODO: support `--config <config/file/path>`
@@ -32,19 +32,19 @@ public class QueryGenerator {
     List<String> intervals = Intervals.dailyQueries();
     String metricCount = isMgw ? "all" : "5"; // change according to Druid template json
     System.out.printf("# To execute %d daily queries for %s metrics%n", intervals.size(), metricCount);
-    buildAndPrintQueries(url, isMgw, "PT1M", intervals, prop);
+    buildAndPrintQueries(url, isMgw, "PT1M", intervals, prop, "1D");
 
     List<String> weeklyIntervals = Intervals.weeklyQueries();
     System.out.printf("# To execute %d weekly queries for %s metrics%n", weeklyIntervals.size(), metricCount);
-    buildAndPrintQueries(url, isMgw, "PT1H", weeklyIntervals, prop);
+    buildAndPrintQueries(url, isMgw, "PT1H", weeklyIntervals, prop, "7D");
 
     List<String> monthlyIntervals = Intervals.monthlyQueries();
     System.out.printf("# To execute %d monthly queries for %s metrics%n", monthlyIntervals.size(), metricCount);
-    buildAndPrintQueries(url, isMgw, "PT1H", monthlyIntervals, prop);
+    buildAndPrintQueries(url, isMgw, "PT1H", monthlyIntervals, prop, "30D");
   }
 
   private static void buildAndPrintQueries(String url, boolean isMgw, String granularity,
-                                           List<String> intervals, Properties prop) {
+                                           List<String> intervals, Properties prop, String period) {
     String qry = url.replace("$1M_or_1H", granularity);
     if (isMgw) qry = qry.replace("$METRICS", metrics(19));
 
@@ -55,11 +55,12 @@ public class QueryGenerator {
       String cmd = qry.replace("$INTERVAL", interval);
       if (!isMgw) {
         String start = interval.split("/")[0].substring(0, 10);
-        String suffix = fromProps + "_" + today + "_" + start;
+        String suffix = fromProps + "_" + today + "_" + start + "_" + period;
         cmd = cmd.replace("$SUFFIX", suffix);
       }
 
       System.out.println(cmd);
+      System.out.println();
     }
 
     System.out.println();

@@ -9,7 +9,7 @@ import java.util.Properties;
 import static com.conviva.ondemand.Utils.*;
 
 public class QueryGenerator {
-  private static final String urlTemplate = "curl -v -X POST -H 'Content-Type: application/json' '$ENDPOINT' -d '$PAYLOAD'";
+  private static final String urlTemplate = "time curl -v -X POST -H 'Content-Type: application/json' '$ENDPOINT' -d '$PAYLOAD'";
 
   public static void main(String[] args) throws IOException {
     // TODO: support `--config <config/file/path>`
@@ -31,15 +31,15 @@ public class QueryGenerator {
 
     List<String> intervals = Intervals.dailyQueries();
     String metricCount = isMgw ? "all" : "5"; // change according to Druid template json
-    System.out.printf("To execute %d daily queries for %s metrics%n", intervals.size(), metricCount);
+    System.out.printf("# To execute %d daily queries for %s metrics%n", intervals.size(), metricCount);
     buildAndPrintQueries(url, isMgw, "PT1M", intervals, prop);
 
     List<String> weeklyIntervals = Intervals.weeklyQueries();
-    System.out.printf("To execute %d weekly queries for %s metrics%n", weeklyIntervals.size(), metricCount);
+    System.out.printf("# To execute %d weekly queries for %s metrics%n", weeklyIntervals.size(), metricCount);
     buildAndPrintQueries(url, isMgw, "PT1H", weeklyIntervals, prop);
 
     List<String> monthlyIntervals = Intervals.monthlyQueries();
-    System.out.printf("To execute %d monthly queries for %s metrics%n", monthlyIntervals.size(), metricCount);
+    System.out.printf("# To execute %d monthly queries for %s metrics%n", monthlyIntervals.size(), metricCount);
     buildAndPrintQueries(url, isMgw, "PT1H", monthlyIntervals, prop);
   }
 
@@ -61,6 +61,8 @@ public class QueryGenerator {
 
       System.out.println(cmd);
     }
+
+    System.out.println();
   }
 
   private static String metrics(int count) {

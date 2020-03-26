@@ -61,7 +61,7 @@ public class Intervals {
     LocalTime midnight = LocalTime.MIDNIGHT;
     LocalDate today = LocalDate.now(ZoneId.of("UTC"));
     LocalDateTime from = LocalDateTime.of(today, midnight);
-    LocalDateTime to = from.minusMonths(3);
+    LocalDateTime to = from.minusMonths(5);
     List<String> xs = new ArrayList<>();
     for (LocalDateTime currDate = from; currDate.isAfter(to); currDate = currDate.minusDays(15)) {
       // 2020-03-01T00:00:00/2020-03-02T00:00:00

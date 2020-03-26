@@ -24,31 +24,27 @@ public class App {
     // granularity: PT1M or PT1H
     // metrics
 
-    int repeat = 1;
-//    int[] metricCount = {2, 4, 8, 19};
+    //    int[] metricCount = {2, 4, 8, 19};
     int[] metricCount = {19};
     Multimap<String, Long> daily = ArrayListMultimap.create();
     Multimap<String, Long> weekly = ArrayListMultimap.create();
     Multimap<String, Long> monthly = ArrayListMultimap.create();
 
-    for (int i = 0; i < repeat; i++) {
-      System.out.println("test instance: " + (i + 1));
-      for (int count : metricCount) {
-        List<String> intervals = Intervals.dailyQueries();
-        System.out.printf("To execute %d daily queries for %d metrics%n", intervals.size(), count);
-        executeQueries(daily, count, "PT1M", intervals);
-        displayTimings("Daily:", daily);
+    for (int count : metricCount) {
+      List<String> intervals = Intervals.dailyQueries();
+      System.out.printf("To execute %d daily queries for %d metrics%n", intervals.size(), count);
+      executeQueries(daily, count, "PT1M", intervals);
+      displayTimings("Daily:", daily);
 
-        List<String> weeklyIntervals = Intervals.weeklyQueries();
-        System.out.printf("To execute %d weekly queries for %d metrics%n", weeklyIntervals.size(), count);
-        executeQueries(weekly, count, "PT1H", weeklyIntervals);
-        displayTimings("Weekly:", weekly);
+      List<String> weeklyIntervals = Intervals.weeklyQueries();
+      System.out.printf("To execute %d weekly queries for %d metrics%n", weeklyIntervals.size(), count);
+      executeQueries(weekly, count, "PT1H", weeklyIntervals);
+      displayTimings("Weekly:", weekly);
 
-        List<String> monthlyIntervals = Intervals.monthlyQueries();
-        System.out.printf("To execute %d monthly queries for %d metrics%n", monthlyIntervals.size(), count);
-        executeQueries(monthly, count, "PT1H", monthlyIntervals);
-        displayTimings("Monthly:", monthly);
-      }
+      List<String> monthlyIntervals = Intervals.monthlyQueries();
+      System.out.printf("To execute %d monthly queries for %d metrics%n", monthlyIntervals.size(), count);
+      executeQueries(monthly, count, "PT1H", monthlyIntervals);
+      displayTimings("Monthly:", monthly);
     }
   }
 
@@ -64,24 +60,24 @@ public class App {
                                      String granularity,
                                      List<String> intervals) throws IOException {
     String metrics = metrics(count);
-//    String iosQry = ios.replace("$METRICS", metrics)
-//        .replace("$1M_or_1H", granularity);
-//    String chromeQry = chrome.replace("$METRICS", metrics)
-//        .replace("$1M_or_1H", granularity);
+    String iosQry = ios.replace("$METRICS", metrics)
+        .replace("$1M_or_1H", granularity);
+    String chromeQry = chrome.replace("$METRICS", metrics)
+        .replace("$1M_or_1H", granularity);
 
-    String s = "curl --request POST 'http://localhost:8080/v1/metrics/experience_insights/timeseries' -H 'Content-Type: application/json' -d '{\"account\": 1960183329, \"metrics\": [$METRICS], \"interval\": \"$INTERVAL\", \"queryGranularity\": \"$1M_or_1H\", \"filter\": {\"type\": \"and\", \"filters\": [{\"type\": \"not\", \"filter\": {\"type\": \"equal\", \"dimension\": \"GEO_DMA\", \"value\": \"-1\"}}]}, \"options\": {\"withTotals\": false}}'".replace("$METRICS", metrics);
+//    String s = "curl --request POST 'http://localhost:8080/v1/metrics/experience_insights/timeseries' -H 'Content-Type: application/json' -d '{\"account\": 1960183329, \"metrics\": [$METRICS], \"interval\": \"$INTERVAL\", \"queryGranularity\": \"$1M_or_1H\", \"filter\": {\"type\": \"and\", \"filters\": [{\"type\": \"not\", \"filter\": {\"type\": \"equal\", \"dimension\": \"GEO_DMA\", \"value\": \"-1\"}}]}, \"options\": {\"withTotals\": false}}'".replace("$METRICS", metrics);
 
     for (String interval : intervals) {
-//      iosQry = iosQry.replace("$INTERVAL", interval);
-//      chromeQry = chromeQry.replace("$INTERVAL", interval);
-//      long time = timeTsQueries(iosQry, chromeQry);
-//      timings.put(interval, time);
+      iosQry = iosQry.replace("$INTERVAL", interval);
+      chromeQry = chromeQry.replace("$INTERVAL", interval);
+      long time = timeTsQueries(iosQry, chromeQry);
+      timings.put(interval, time);
 
 //      Utils.delay(30_000);
 
-      String qry = s.replace("$INTERVAL", interval).replace("$1M_or_1H", granularity);
-      System.out.println(qry);
-
+//      String qry = s.replace("$INTERVAL", interval).replace("$1M_or_1H", granularity);
+//      System.out.println(qry);
+      System.out.println(iosQry);
     }
   }
 

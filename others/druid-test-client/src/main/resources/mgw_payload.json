@@ -1,0 +1,28 @@
+{
+  "account": 1960183329,
+  "metrics": [$METRICS],
+  "interval": "$INTERVAL",
+  "queryGranularity": "$1M_or_1H",
+  "filter": {
+    "type": "and",
+    "filters": [
+      {"type": "selector", "dimension": "customerId", "value": "1960180565"},
+      {
+        "type": "or",
+        "fields": [
+          {"type": "selector", "dimension": "geo.city", "value": "288482165539265064"},
+          {"type": "selector", "dimension": "geo.dma", "value": "501"},
+          {"type": "selector", "dimension": "geo.dma", "value": "803"}
+        ]
+      },
+      {
+        "type": "and",
+        "fields": [
+          {"type": "selector", "dimension": "tags.m3.dv.os", "value": "iOS"},
+          {"type": "selector", "dimension": "tags.m3.dv.br", "value": "Safari"}
+        ]
+      }
+    ]
+  },
+  "options": {"withTotals": false}
+}

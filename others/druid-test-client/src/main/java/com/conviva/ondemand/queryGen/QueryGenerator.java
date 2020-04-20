@@ -1,4 +1,4 @@
-package com.conviva.ondemand;
+package com.conviva.ondemand.queryGen;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -6,7 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Properties;
 
-import static com.conviva.ondemand.Utils.*;
+import static com.conviva.ondemand.Utils.loadProperties;
+import static com.conviva.ondemand.Utils.readResource;
 
 public class QueryGenerator {
   private static final String urlTemplate = "time curl -X POST -H 'Content-Type: application/json' '$ENDPOINT' -d '$PAYLOAD'";
@@ -51,6 +52,10 @@ public class QueryGenerator {
     String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
     String fromProps = prop.getProperty("druid_query_suffix");
 
+    if (!isMgw && period.equals("1D")) {
+      qry = qry.replaceAll("experience_insights\\.session_summaries\\.PT1H", "experience_insights.session_summaries.PT1M");
+    }
+
     for (String interval : intervals) {
       String cmd = qry.replace("$INTERVAL", interval);
       if (!isMgw) {
@@ -60,7 +65,6 @@ public class QueryGenerator {
       }
 
       System.out.println(cmd);
-      System.out.println();
     }
 
     System.out.println();

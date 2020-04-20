@@ -1,4 +1,4 @@
-package com.conviva.ondemand;
+package com.conviva.ondemand.queryGen;
 
 import com.google.common.collect.Multimap;
 

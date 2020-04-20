@@ -3,12 +3,12 @@
   "dataSource": {
     "type": "union",
     "dataSources": [
-      "experience_insights.session_summaries.PT1H.6",
-      "experience_insights.session_summaries.PT1H.1",
-      "experience_insights.session_summaries.PT1H.3",
-      "experience_insights.session_summaries.PT1H.4",
-      "experience_insights.session_summaries.PT1H.5",
-      "experience_insights.session_summaries.PT1H.2"
+      "experience_insights.session_summaries.PT1M.6",
+      "experience_insights.session_summaries.PT1M.1",
+      "experience_insights.session_summaries.PT1M.3",
+      "experience_insights.session_summaries.PT1M.4",
+      "experience_insights.session_summaries.PT1M.5",
+      "experience_insights.session_summaries.PT1M.2"
     ]
   },
   "intervals": ["$INTERVAL"],
@@ -19,7 +19,21 @@
   "filter": {
     "type": "and",
     "fields": [
-      {"type": "selector", "dimension": "customerId", "value": "1960180565"},
+      {
+        "type": "or",
+        "fields": [
+          {"type": "selector", "dimension": "geo.city", "value": "288482165539265064"},
+          {"type": "selector", "dimension": "geo.dma", "value": "501"},
+          {"type": "selector", "dimension": "geo.dma", "value": "803"}
+        ]
+      },
+      {
+        "type": "and",
+        "fields": [
+          {"type": "selector", "dimension": "tags.m3.dv.os", "value": "iOS"},
+          {"type": "selector", "dimension": "tags.m3.dv.br", "value": "Safari"}
+        ]
+      },
       {
         "type": "or",
         "fields": [

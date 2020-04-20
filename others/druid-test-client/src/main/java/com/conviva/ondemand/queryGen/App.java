@@ -1,4 +1,4 @@
-package com.conviva.ondemand;
+package com.conviva.ondemand.queryGen;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -6,10 +6,6 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
-
-import static com.conviva.ondemand.Intervals.formatMultimap;
-import static java.util.stream.Collectors.joining;
 
 public class App {
   private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");

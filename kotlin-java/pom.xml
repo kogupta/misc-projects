@@ -11,7 +11,7 @@
   <description>Working through the Manning book func-prog-Java, joy-of-kotlin</description>
 
   <properties>
-    <kotlin.version>1.3.21</kotlin.version>
+    <kotlin.version>1.6.0</kotlin.version>
     <vavr.version>0.10.0</vavr.version>
     <arrow.version>0.8.2</arrow.version>
     <junit.version>4.12</junit.version>
